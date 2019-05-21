@@ -5,8 +5,15 @@
 #
 # Distributed under terms of the MIT license.
 
+import hashlib
 import json
+import logging
 import math
+try:
+    import networkx
+except ImportError:
+    logging.warning("Can't import networkx, you won't be able to use "
+                    "NetworkedNodes")
 
 from iotlab_controller import common
 
@@ -152,3 +159,132 @@ class BaseNodes(object):
     def to_json(self):
         return json.dumps({n: self.nodes[n].repr_json()
                            for n in self.nodes})
+
+
+class NetworkedNodes(BaseNodes):
+    def __init__(self, site, edgelist_file=None, weight_distance=True,
+                 api=None):
+        """
+        >>> import io
+        >>> nodes = NetworkedNodes("grenoble",
+        ...     io.BytesIO(
+        ...         b"m3-1 m3-2 {'weight': 2}\\nm3-2 m3-3 {'weight': 1}"
+        ...     )
+        ... )
+        >>> for n in sorted(nodes, key=lambda n: n.uri):
+        ...     print(n.uri)
+        m3-1.grenoble.iot-lab.info
+        m3-2.grenoble.iot-lab.info
+        m3-3.grenoble.iot-lab.info
+        >>> for n in sorted(nodes.network.nodes()):
+        ...     print(nodes.network.nodes[n]["info"].uri)
+        m3-1.grenoble.iot-lab.info
+        m3-2.grenoble.iot-lab.info
+        m3-3.grenoble.iot-lab.info
+        >>> nodes = NetworkedNodes("grenoble")
+        >>> len(nodes)
+        0
+        """
+        self.site = site
+        if edgelist_file is not None:
+            self.network = networkx.read_edgelist(edgelist_file)
+            super(NetworkedNodes, self).__init__(
+                [common.get_uri(site, n) for n in self.network.nodes()], api
+            )
+            info = {n: self[n] for n in self.network.nodes()}
+            networkx.set_node_attributes(self.network, info, "info")
+            if weight_distance:
+                for n1, n2 in self.network.edges():
+                    info1 = self[n1]
+                    info2 = self[n2]
+                    self.network[n1][n2]["weight"] = info1.distance(info2)
+        else:
+            self.network = networkx.Graph()
+            super(NetworkedNodes, self).__init__()
+
+    def __getitem__(self, node):
+        return super(NetworkedNodes, self).__getitem__(
+                common.get_uri(self.site, node)
+            )
+
+    def __delitem__(self, node):
+        """
+        >>> import io
+        >>> nodes = NetworkedNodes("grenoble",
+        ...     io.BytesIO(
+        ...         b"m3-1 m3-2 {'weight': 2}\\nm3-2 m3-3 {'weight': 1}"
+        ...     )
+        ... )
+        >>> del nodes["m3-1"]
+        >>> for n in sorted(nodes, key=lambda n: n.uri):
+        ...     print(n.uri)
+        m3-2.grenoble.iot-lab.info
+        m3-3.grenoble.iot-lab.info
+        """
+        super(NetworkedNodes, self).__delitem__(
+                common.get_uri(self.site, node)
+            )
+        self.network.remove_node(node)
+
+    def _network_digest(self):
+        edges = sorted(tuple(sorted([a, b])) for a, b in self.network.edges)
+        return hashlib.sha512(str(edges).encode()).hexdigest()[:8]
+
+    def __str__(self):
+        return "{}".format(self._network_digest())
+
+    def add(self, node):
+        """
+        >>> nodes = NetworkedNodes("saclay")
+        >>> nodes.add("m3-1")
+        >>> for n in sorted(nodes, key=lambda n: n.uri):
+        ...     print(n.uri)
+        m3-1.saclay.iot-lab.info
+        >>> for n in sorted(nodes.network.nodes()):
+        ...     print(nodes.network.nodes[n]["info"].uri)
+        m3-1.saclay.iot-lab.info
+        """
+        uri = common.get_uri(self.site, node)
+        if node in self.nodes:
+            return
+        super(NetworkedNodes, self).add(uri)
+        info = self[node]
+        self.network.add_node(node, info=info)
+
+    def add_node(self, node):
+        return self.add(node)
+
+    def add_edge(self, node1, node2, weight=None):
+        """
+        >>> nodes = NetworkedNodes("saclay")
+        >>> nodes.add_edge("m3-1", "m3-3")
+        >>> for n in sorted(nodes, key=lambda n: n.uri):
+        ...     print(n.uri)
+        m3-1.saclay.iot-lab.info
+        m3-3.saclay.iot-lab.info
+        >>> for n in sorted(nodes.network.edges()):
+        ...     print(n, nodes.network[n[0]][n[1]]["weight"])
+        ('m3-1', 'm3-3') 1.6
+        """
+        self.add(node1)
+        self.add(node2)
+        if weight is None:
+            info1 = self[node1]
+            info2 = self[node2]
+            weight = info1.distance(info2)
+        self.network.add_edge(node1, node2, weight=weight)
+
+    def save_edgelist(self, path):
+        """
+        >>> import io
+        >>> nodes = NetworkedNodes("grenoble",
+        ...     io.BytesIO(
+        ...         b"m3-1 m3-2 {'weight': 2}\\nm3-2 m3-3 {'weight': 1}"
+        ...     )
+        ... )
+        >>> out = io.BytesIO()
+        >>> nodes.save_edgelist(out)
+        >>> out.getvalue()
+        b'm3-1 m3-2 0.5999999999999979\\nm3-2 m3-3 0.6000000000000014\\n'
+        """
+        networkx.write_edgelist(self.network, path, data=["weight"])
