@@ -5,6 +5,7 @@
 #
 # Distributed under terms of the MIT license.
 
+import iotlabcli.node
 import hashlib
 import json
 import logging
@@ -70,6 +71,14 @@ class BaseNode(object):
         return math.sqrt((self.x - other.x) ** 2 +
                          (self.y - other.y) ** 2 +
                          (self.z - other.z) ** 2)
+
+    def flash(self, exp_id, firmware):
+        return iotlabcli.node.node_command(self.api, "update", exp_id,
+                                           [self.uri], firmware.path)
+
+    def reset(self, exp_id):
+        return iotlabcli.node.node_command(self.api, "reset", exp_id,
+                                           [self.uri])
 
     def repr_json(self):
         return {k: v for k, v in self.__dict__.items() if k not in ["api"]}
@@ -180,6 +189,14 @@ class BaseNodes(object):
                 self.nodes[node] = res
                 return
         raise NodeError("Can't load node information on {}".format(node))
+
+    def flash(self, exp_id, firmware):
+        return iotlabcli.node.node_command(self.api, "update", exp_id,
+                                           self.nodes, firmware.path)
+
+    def reset(self, exp_id):
+        return iotlabcli.node.node_command(self.api, "reset", exp_id,
+                                           self.nodes)
 
     def select(self, nodes):
         """
