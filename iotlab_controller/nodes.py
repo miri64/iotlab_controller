@@ -395,6 +395,30 @@ class SinkNetworkedNodes(NetworkedNodes):
     def __str__(self):
         return "{}x{}".format(self.sink, self._network_digest())
 
+    def __iter__(self):
+        """
+        >>> import io
+        >>> nodes = SinkNetworkedNodes("grenoble", "m3-2",
+        ...     io.BytesIO(
+        ...         b"m3-1 m3-2 {'weight': 2}\\nm3-2 m3-3 {'weight': 1}"
+        ...     )
+        ... )
+        >>> for n in sorted(nodes, key=lambda n: n.uri):
+        ...     print(n.uri)
+        m3-1.grenoble.iot-lab.info
+        m3-2.grenoble.iot-lab.info
+        m3-3.grenoble.iot-lab.info
+        >>> for n in nodes:
+        ...     print(n.uri)
+        ...     break
+        m3-2.grenoble.iot-lab.info
+        """
+        sink_uri = common.get_uri(self.site, self.sink)
+        yield self.nodes[sink_uri]
+        for node in self.nodes:
+            if node != sink_uri:
+                yield self.nodes[node]
+
     @property
     def non_sink_node_uris(self):
         return set(n for n in self.nodes
