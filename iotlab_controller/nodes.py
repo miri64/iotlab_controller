@@ -84,17 +84,21 @@ class BaseNode(object):
         return iotlabcli.node.node_command(self.api, "profile", exp_id,
                                            [self.uri], profile)
 
-    def repr_json(self):
+    def to_dict(self):
         return {k: v for k, v in self.__dict__.items() if k not in ["api"]}
 
     def to_json(self):
         return json.dumps(self,
-                          default=lambda o: o.repr_json(),
+                          default=lambda o: o.to_dict(),
                           sort_keys=True, indent=4)
 
-    @staticmethod
-    def from_json(obj, api):
-        return BaseNode(api, **json.loads(obj))
+    @classmethod
+    def from_dict(cls, obj, api):
+        return cls(api, **obj)
+
+    @classmethod
+    def from_json(cls, obj, api):
+        return cls.from_dict(json.loads(obj), api)
 
 
 class BaseNodes(object):
@@ -223,8 +227,14 @@ class BaseNodes(object):
                                          self)
 
     def to_json(self):
-        return json.dumps({n: self.nodes[n].repr_json()
+        return json.dumps({n: self.nodes[n].to_dict()
                            for n in self.nodes})
+
+    @classmethod
+    def from_json(cls, obj, state=None, api=None, node_class=BaseNode):
+        nodes = json.loads(obj)
+        nodes = {k: node_class.from_repr_json(v) for k, v in nodes.items()}
+        return cls._from_existing_nodes(nodes, state, api, node_class)
 
 
 class NetworkedNodes(BaseNodes):
