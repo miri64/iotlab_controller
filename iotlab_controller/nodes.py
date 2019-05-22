@@ -132,6 +132,31 @@ class BaseNodes(object):
         """
         del self.nodes[node]
 
+    def __add__(self, other):
+        """
+        >>> a = BaseNodes(["m3-1.lille.iot-lab.info",
+        ...                "m3-2.lille.iot-lab.info"])
+        >>> b = BaseNodes(["m3-2.lille.iot-lab.info",
+        ...                "m3-3.lille.iot-lab.info"])
+        >>> nodes = a + b
+        >>> for n in sorted(nodes, key=lambda n: n.uri):
+        ...     print(n.uri)
+        m3-1.lille.iot-lab.info
+        m3-2.lille.iot-lab.info
+        m3-3.lille.iot-lab.info
+        """
+        nodes = self.nodes.copy()
+        nodes.update(other.nodes)
+        return self._from_existing_nodes(nodes, self.state, self.api,
+                                         self.node_class)
+
+    @classmethod
+    def _from_existing_nodes(cls, nodes, state=None, api=None,
+                             node_class=BaseNode):
+        res = cls(state=state, api=api, node_class=node_class)
+        res.nodes = nodes
+        return res
+
     def _fetch_all_nodes(self):
         kwargs = {}
         if self.state is not None:
@@ -155,6 +180,22 @@ class BaseNodes(object):
                 self.nodes[node] = res
                 return
         raise NodeError("Can't load node information on {}".format(node))
+
+    def select(self, nodes):
+        """
+        >>> a = BaseNodes(["m3-1.lille.iot-lab.info",
+        ...                "m3-2.lille.iot-lab.info",
+        ...                "m3-3.lille.iot-lab.info"])
+        >>> nodes = a.select(["m3-1.lille.iot-lab.info",
+        ...                   "m3-2.lille.iot-lab.info"])
+        >>> for n in sorted(nodes, key=lambda n: n.uri):
+        ...     print(n.uri)
+        m3-1.lille.iot-lab.info
+        m3-2.lille.iot-lab.info
+        """
+        ns = {k: v for k, v in self.nodes.copy().items() if k in nodes}
+        return self._from_existing_nodes(ns, self.state, self.api,
+                                         self)
 
     def to_json(self):
         return json.dumps({n: self.nodes[n].repr_json()
@@ -226,6 +267,11 @@ class NetworkedNodes(BaseNodes):
             )
         self.network.remove_node(node)
 
+    def __add__(self, other):
+        res = super(NetworkedNodes, self).__add__(other)
+        res.network = networkx.compose(self.network, other.network)
+        return res
+
     def _network_digest(self):
         edges = sorted(tuple(sorted([a, b])) for a, b in self.network.edges)
         return hashlib.sha512(str(edges).encode()).hexdigest()[:8]
@@ -273,6 +319,12 @@ class NetworkedNodes(BaseNodes):
             info2 = self[node2]
             weight = info1.distance(info2)
         self.network.add_edge(node1, node2, weight=weight)
+
+    def select(self, nodes):
+        res = super(NetworkedNodes, self).select([common.get_uri(n)
+                                                  for n in nodes])
+        res.network = networkx.Graph(self.network.subgraph(nodes))
+        return res
 
     def save_edgelist(self, path):
         """
