@@ -296,6 +296,11 @@ class NetworkedNodes(BaseNodes):
     def __str__(self):
         return "{}".format(self._network_digest())
 
+    @property
+    def leafs(self):
+        return [n for n in self.network.nodes
+                if len(list(self.network.neighbors(n))) == 1]
+
     def add(self, node):
         """
         >>> nodes = NetworkedNodes("saclay")
@@ -336,6 +341,9 @@ class NetworkedNodes(BaseNodes):
             info2 = self[node2]
             weight = info1.distance(info2)
         self.network.add_edge(node1, node2, weight=weight)
+
+    def neighbors(self, node):
+        return self.network.neighbors(node)
 
     def select(self, nodes):
         res = super(NetworkedNodes, self).select([common.get_uri(n)
