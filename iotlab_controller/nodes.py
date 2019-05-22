@@ -357,3 +357,37 @@ class NetworkedNodes(BaseNodes):
         b'm3-1 m3-2 0.5999999999999979\\nm3-2 m3-3 0.6000000000000014\\n'
         """
         networkx.write_edgelist(self.network, path, data=["weight"])
+
+
+class SinkNetworkedNodes(NetworkedNodes):
+    def __init__(self, site, sink, edgelist_file=None, weight_distance=True,
+                 api=None):
+        super(SinkNetworkedNodes, self).__init__(site, edgelist_file,
+                                                 weight_distance, api)
+        self.sink = sink
+
+    def __str__(self):
+        return "{}x{}".format(self.sink, self._network_digest())
+
+    @property
+    def non_sink_node_uris(self):
+        return set(n for n in self.nodes
+                   if n != common.get_uri(self.site, self.sink))
+
+    @property
+    def non_sink_nodes(self):
+        return [n for n in self.network.nodes() if n != self.sink]
+
+    def flash(self, exp_id, firmware, sink_firmware=None):
+        if sink_firmware is None:
+            return super(SinkNetworkedNodes, self).flash(exp_id, firmware)
+        else:
+            res1 = iotlabcli.node.node_command(
+                    self.api, "update", exp_id, self.non_sink_node_uris,
+                    firmware.path
+                )
+            res2 = iotlabcli.node.node_command(
+                    self.api, "update", exp_id, [self.sink], sink_firmware.path
+                )
+            res1.update(res2)
+            return res1
