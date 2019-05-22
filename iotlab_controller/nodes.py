@@ -326,8 +326,8 @@ class NetworkedNodes(BaseNodes):
         m3-1.saclay.iot-lab.info
         m3-3.saclay.iot-lab.info
         >>> for n in sorted(nodes.network.edges()):
-        ...     print(n, nodes.network[n[0]][n[1]]["weight"])
-        ('m3-1', 'm3-3') 1.6
+        ...     print(sorted(n), nodes.network[n[0]][n[1]]["weight"])
+        ['m3-1', 'm3-3'] 1.6
         """
         self.add(node1)
         self.add(node2)
