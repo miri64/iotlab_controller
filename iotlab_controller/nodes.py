@@ -80,6 +80,10 @@ class BaseNode(object):
         return iotlabcli.node.node_command(self.api, "reset", exp_id,
                                            [self.uri])
 
+    def profile(self, exp_id, profile):
+        return iotlabcli.node.node_command(self.api, "profile", exp_id,
+                                           [self.uri], profile)
+
     def repr_json(self):
         return {k: v for k, v in self.__dict__.items() if k not in ["api"]}
 
@@ -197,6 +201,10 @@ class BaseNodes(object):
     def reset(self, exp_id):
         return iotlabcli.node.node_command(self.api, "reset", exp_id,
                                            self.nodes)
+
+    def profile(self, exp_id, profile):
+        return iotlabcli.node.node_command(self.api, "profile", exp_id,
+                                           self.nodes, profile)
 
     def select(self, nodes):
         """
@@ -396,6 +404,21 @@ class SinkNetworkedNodes(NetworkedNodes):
                 )
             res2 = iotlabcli.node.node_command(
                     self.api, "update", exp_id, [self.sink], sink_firmware.path
+                )
+            res1.update(res2)
+            return res1
+
+    def profile(self, exp_id, profile, sink_profile=None):
+        if sink_profile is None:
+            return super(SinkNetworkedNodes, self).profile(exp_id, profile)
+        else:
+            res1 = iotlabcli.node.node_command(
+                    self.api, "profile", exp_id, self.non_sink_node_uris,
+                    profile
+                )
+            res2 = iotlabcli.node.node_command(
+                    self.api, "profile", exp_id, [self.sink],
+                    sink_profile
                 )
             res1.update(res2)
             return res1
