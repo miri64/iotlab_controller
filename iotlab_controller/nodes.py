@@ -168,16 +168,25 @@ class BaseNodes(object):
                                          self.node_class)
 
     @classmethod
+    def all_nodes(cls, site=None, state=None, api=None, node_class=BaseNode):
+        res = cls(state=state, api=api, node_class=node_class)
+        res.nodes = {args["network_address"]: node_class(api=res.api, **args)
+                     for args in res._fetch_all_nodes(site=site)}
+        return res
+
+    @classmethod
     def _from_existing_nodes(cls, nodes, state=None, api=None,
                              node_class=BaseNode):
         res = cls(state=state, api=api, node_class=node_class)
         res.nodes = nodes
         return res
 
-    def _fetch_all_nodes(self):
+    def _fetch_all_nodes(self, site=None):
         kwargs = {}
         if self.state is not None:
             kwargs["state"] = self.state
+        if site is not None:
+            kwargs["site"] = site
         return self.api.get_resources(**kwargs)["items"]
 
     def add(self, node):
