@@ -6,7 +6,7 @@
 #
 # Distributed under terms of the MIT license.
 
-import os.path
+import os
 import subprocess
 
 from iotlab_controller import firmware
@@ -21,7 +21,8 @@ class RIOTFirmware(firmware.BaseFirmware):
         self.application_path = application_path
         self.board = board
         self.flashfile = flashfile
-        self.env = {"BOARD": board}
+        self.env = os.environ.copy()
+        self.env["BOARD"] = board
         if env is not None:
             self.env.update(env)
 
