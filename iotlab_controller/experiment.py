@@ -119,6 +119,6 @@ class BaseExperiment(object):
     def run(self):
         if self.is_scheduled():
             if self.target:
-                self.target(*self.target_args, **self.target_kwargs)
+                self.target(self, *self.target_args, **self.target_kwargs)
         else:
             raise ExperimentError("{} is not scheduled".format(self))
