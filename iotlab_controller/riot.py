@@ -15,12 +15,17 @@ from iotlab_controller import firmware
 class RIOTFirmware(firmware.BaseFirmware):
     FILE_EXTENSION = "elf"
 
-    def __init__(self, application_name, application_path, board,
+    def __init__(self, application_path, board, application_name=None,
                  flashfile=None, env=None):
-        self.application_name = application_name
         self.application_path = application_path
         self.board = board
         self.flashfile = flashfile
+        if application_name is None:
+            if application_path.endswith("/"):
+                application_path = application_path[:1]
+            self.application_name = os.path.basename(application_path)
+        else:
+            self.application_name = application_name
         self.env = os.environ.copy()
         self.env["BOARD"] = board
         if env is not None:
