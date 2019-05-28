@@ -19,16 +19,14 @@ class BaseExperiment(object):
     def __init__(self, name, nodes, target, firmwares=None, exp_id=None,
                  profiles=None, api=None, *args, **kwargs):
         if (firmwares is not None) and \
-           ((len(firmwares) > 1) or (len(nodes) != len(firmwares))):
+           (len(firmwares) > 1) and (len(nodes) != len(firmwares)):
             raise ExperimentError(
-                "firmwares must be of length one or "
-                "the multiplicity of nodes"
+                "firmwares must be of length 1 or the multiplicity of nodes"
             )
         if (profiles is not None) and \
-           ((len(profiles) > 1) or (len(nodes) != len(profiles))):
+           (len(profiles) > 1) and (len(nodes) != len(profiles)):
             raise ExperimentError(
-                "profiles must be of length one or  "
-                "the multiplicity of nodes"
+                "profiles must be of length 1 or the multiplicity of nodes"
             )
         username, _ = iotlabcli.auth.get_user_credentials()
         self.name = name
