@@ -7,6 +7,7 @@
 # Distributed under terms of the MIT license.
 
 import libtmux
+import logging
 import subprocess
 import time
 
@@ -74,8 +75,15 @@ class TmuxExperiment(base.BaseExperiment):
         self.hit_ctrl_c()
         time.sleep(.1)
         self.send_keys("reset", enter=True)
-        cmd = "ssh {}@{}.{} serial_aggregator -i {}".format(
-                self.username, site, IOTLAB_DOMAIN, self.exp_id
+        if site is not None:
+            ssh = "ssh {}@{}.{} ".format(self.username, site, IOTLAB_DOMAIN)
+        else:
+            logging.warning("Assuming to run on SSH frontend")
+            logging.warning("\tadd `site` parameter to "
+                            "`start_serial_aggregator()` to prevent")
+            ssh = ""
+        cmd = "{}serial_aggregator -i {}{}{}".format(
+                ssh, self.exp_id
             )
         if logname is not None:
             cmd += "| tee -a {}".format(logname)
