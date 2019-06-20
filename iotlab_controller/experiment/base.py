@@ -9,6 +9,7 @@ import iotlabcli.auth
 import iotlabcli.experiment
 
 from iotlab_controller import common
+from iotlab_controller import nodes
 
 
 class ExperimentError(Exception):
@@ -51,6 +52,29 @@ class BaseExperiment(object):
                                           self.exp_id)
         return "<{}: {} (unscheduled>)".format(type(self).__name__,
                                                self.name)
+
+    @classmethod
+    def iter_experiments(cls, include_waiting=False, target=None,
+                         api=None, nodes_class=nodes.BaseNodes,
+                         node_class=nodes.BaseNode, *args, **kwargs):
+
+        if api is None:
+            api = common.get_default_api()
+
+        def _get_exp(exp_id):
+            info = api.get_experiment_info(exp_id)
+            nodes = nodes_class(node_list=info["nodes"], api=api,
+                                node_class=node_class)
+            return cls(name=info["name"], nodes=nodes, target=target,
+                       exp_id=exp_id, api=api, *args, **kwargs)
+
+        exps = iotlabcli.experiment.get_active_experiments(
+                api, running_only=not include_waiting
+            )
+        for exp_id in exps.get("Running", []):
+            yield _get_exp(exp_id)
+        for exp_id in exps.get("Waiting", []):
+            yield _get_exp(exp_id)
 
     def _check_experiment(self):
         exp = iotlabcli.experiment.get_experiment(self.api, self.exp_id)
