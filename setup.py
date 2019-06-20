@@ -11,7 +11,7 @@ import os
 import sys
 
 name = "iotlab_controller"
-version = "0.1.0a"
+version = "0.2.0a"
 description = "Python-based controller for IoT-LAB experiments"
 author = "Martine Lenders"
 author_email = "m.lenders@fu-berlin.de"
