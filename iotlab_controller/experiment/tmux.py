@@ -11,9 +11,9 @@ import subprocess
 import time
 
 from ..constants import IOTLAB_DOMAIN
-from ..experiment import BaseExperiment
+from ..experiment import base
 
-class TmuxExperiment(BaseExperiment):
+class TmuxExperiment(base.BaseExperiment):
     def __init__(self, name, nodes,
                  session_name, window_name=None, pane_id=None, cwd=None,
                  env=None,
@@ -32,9 +32,9 @@ class TmuxExperiment(BaseExperiment):
     def _create_tmux_session(self):
         cmd = ["tmux", "new-session", "-d", "-s", self.session_name]
         if self.window_name is not None:
-            cmd.extend(["-n", window_name])
+            cmd.extend(["-n", self.window_name])
         if self.cwd is not None:
-            cmd.extend(["-c", cwd])
+            cmd.extend(["-c", self.cwd])
         subprocess.run(cmd)
         self.tmux_server = libtmux.Server()
         return self.tmux_server.find_where({"session_name": self.session_name})
