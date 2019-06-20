@@ -16,19 +16,21 @@ from ..experiment import base
 
 class TmuxExperiment(base.BaseExperiment):
     def __init__(self, name, nodes,
-                 session_name, window_name=None, pane_id=None, cwd=None,
-                 env=None,
+                 session_name, window_name=None, pane_id=None,
+                 cwd=None, env=None, target=None,
                  firmwares=None, exp_id=None, profiles=None,
                  api=None, *args, **kwargs):
-        super().__init__(name, nodes, firmwares=firmwares, exp_id=exp_id,
-                         profiles=profiles, api=api, *args, **kwargs)
+        super().__init__(name=name, nodes=nodes, target=target,
+                         firmwares=firmwares, exp_id=exp_id, profiles=profiles,
+                         api=api, *args, **kwargs)
         self.tmux_server = libtmux.Server()
-        self.tmux_session = None
         self.session_name = session_name
         self.window_name = window_name
         self.pane_id = pane_id
         self.cwd = cwd
         self.env = env
+        self.tmux_session = None
+        self._get_pane()
 
     def _create_tmux_session(self):
         cmd = ["tmux", "new-session", "-d", "-s", self.session_name]
@@ -40,8 +42,8 @@ class TmuxExperiment(base.BaseExperiment):
         self.tmux_server = libtmux.Server()
         return self.tmux_server.find_where({"session_name": self.session_name})
 
-    def run(self, site, logname=None):
-        if type(self.tmux_session) is not libtmux.Pane:
+    def _get_pane(self):
+        if self.tmux_session is None:
             # find pane
             search_params = {
                 "session_name": self.session_name,
@@ -72,6 +74,10 @@ class TmuxExperiment(base.BaseExperiment):
                 self.tmux_session = self.tmux_session.find_where(search_params)
             else:
                 self.tmux_session = self.tmux_session.select_pane(0)
+        return self.tmux_session
+
+    def start_serial_aggregator(self, site=None, with_a8=False, color=False,
+                                logname=None):
         self.hit_ctrl_c()
         time.sleep(.1)
         self.send_keys("reset", enter=True)
@@ -82,12 +88,23 @@ class TmuxExperiment(base.BaseExperiment):
             logging.warning("\tadd `site` parameter to "
                             "`start_serial_aggregator()` to prevent")
             ssh = ""
+        if with_a8:
+            with_a8 = " --with-a8"
+        else:
+            with_a8 = ""
+        if color:
+            color = " --color"
+        else:
+            color = ""
         cmd = "{}serial_aggregator -i {}{}{}".format(
-                ssh, self.exp_id
+                ssh, self.exp_id, with_a8, color
             )
         if logname is not None:
             cmd += "| tee -a {}".format(logname)
         self.send_keys(cmd, enter=True)
+
+    def stop_serial_aggregator(self):
+        self.hit_ctrl_c()
 
     def send_keys(self, keys, enter=False, wait_after=0):
         assert self.tmux_session is not None
@@ -101,7 +118,9 @@ class TmuxExperiment(base.BaseExperiment):
     def hit_ctrl_c(self):
         self.send_keys("C-c")
 
+    def hit_ctrl_d(self):
+        self.send_keys("C-d")
+
     def hit_enter(self):
         assert self.tmux_session is not None
         self.tmux_session.enter()
-
