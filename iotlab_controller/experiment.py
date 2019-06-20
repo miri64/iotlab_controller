@@ -16,7 +16,7 @@ class ExperimentError(Exception):
 
 
 class BaseExperiment(object):
-    def __init__(self, name, nodes, target, firmwares=None, exp_id=None,
+    def __init__(self, name, nodes, target=None, firmwares=None, exp_id=None,
                  profiles=None, api=None, *args, **kwargs):
         if (firmwares is not None) and \
            (len(firmwares) > 1) and (len(nodes) != len(firmwares)):
