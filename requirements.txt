@@ -1,2 +1,1 @@
 iotlabcli>=2.5
-networkx>=2.2

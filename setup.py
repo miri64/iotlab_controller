@@ -23,6 +23,16 @@ def get_requirements():
         for line in req_file:
             yield line.strip()
 
+extras_require = {
+    "networked": ["networkx>=2.2"],
+    "all": []
+}
+
+for k, v in extras_require.items():
+    if k.startswith("k") or (k in ["all"]):
+        continue
+    extras_require["all"].extend(v)
+
 setup(
     name=name,
     version=version,
@@ -47,5 +57,6 @@ setup(
     ],
 
     install_requires=list(get_requirements()),
-    python_requires=">=3.4"
+    extras_require=extras_require,
+    python_requires=">=3.4",
 )
