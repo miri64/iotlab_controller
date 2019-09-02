@@ -294,9 +294,9 @@ class NetworkedNodes(BaseNodes):
                                                  node_class=node_class)
 
     def __getitem__(self, node):
-        return super(NetworkedNodes, self).__getitem__(
-                common.get_uri(self.site, node)
-            )
+        if not self._is_uri(node):
+            node = common.get_uri(self.site, node)
+        return super(NetworkedNodes, self).__getitem__(node)
 
     def __delitem__(self, node):
         """
@@ -311,11 +311,18 @@ class NetworkedNodes(BaseNodes):
         ...     print(n.uri)
         m3-2.grenoble.iot-lab.info
         m3-3.grenoble.iot-lab.info
+        >>> del nodes["m3-3.grenoble.iot-lab.info"]
+        >>> for n in sorted(nodes, key=lambda n: n.uri):
+        ...     print(n.uri)
+        m3-2.grenoble.iot-lab.info
         """
-        super(NetworkedNodes, self).__delitem__(
-                common.get_uri(self.site, node)
-            )
+        if self._is_uri(node):
+            uri = node
+            node = node.split(".")[0]
+        else:
+            uri = common.get_uri(self.site, node)
         self.network.remove_node(node)
+        super(NetworkedNodes, self).__delitem__(uri)
 
     def __add__(self, other):
         res = super(NetworkedNodes, self).__add__(other)
@@ -328,6 +335,9 @@ class NetworkedNodes(BaseNodes):
 
     def __str__(self):
         return "{}".format(self._network_digest())
+
+    def _is_uri(self, node):
+        return ".{}.".format(self.site) in node
 
     @property
     def leafs(self):
@@ -345,7 +355,11 @@ class NetworkedNodes(BaseNodes):
         ...     print(nodes.network.nodes[n]["info"].uri)
         m3-1.saclay.iot-lab.info
         """
-        uri = common.get_uri(self.site, node)
+        if self._is_uri(node):
+            uri = node
+            node = uri.split(".")[0]
+        else:
+            uri = common.get_uri(self.site, node)
         if node in self.nodes:
             return
         super(NetworkedNodes, self).add(uri)
@@ -367,6 +381,10 @@ class NetworkedNodes(BaseNodes):
         ...     print(sorted(n), nodes.network[n[0]][n[1]]["weight"])
         ['m3-1', 'm3-3'] 1.6
         """
+        if isinstance(node1, BaseNode):
+            node1 = node1.uri.split(".")[0]
+        if isinstance(node2, BaseNode):
+            node2 = node2.uri.split(".")[0]
         self.add(node1)
         self.add(node2)
         if weight is None:
