@@ -168,12 +168,12 @@ class BaseNodes(object):
                                          self.node_class)
 
     @classmethod
-    def all_nodes(cls, site=None, state=None, api=None,
+    def all_nodes(cls, site=None, state=None, archi=None, api=None,
                   node_class=BaseNode, *args, **kwargs):
         res = cls(site=site, state=state, api=api, node_class=node_class,
                   *args, **kwargs)
         res.nodes = {args["network_address"]: node_class(api=res.api, **args)
-                     for args in res._fetch_all_nodes(site=site)}
+                     for args in res._fetch_all_nodes(site=site, archi=archi)}
         return res
 
     @classmethod
@@ -183,8 +183,10 @@ class BaseNodes(object):
         res.nodes = nodes
         return res
 
-    def _fetch_all_nodes(self, site=None):
+    def _fetch_all_nodes(self, site=None, archi=None):
         kwargs = {}
+        if archi is not None:
+            kwargs["archi"] = archi
         if self.state is not None:
             kwargs["state"] = self.state
         if site is not None:
