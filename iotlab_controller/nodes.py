@@ -168,8 +168,10 @@ class BaseNodes(object):
                                          self.node_class)
 
     @classmethod
-    def all_nodes(cls, site=None, state=None, api=None, node_class=BaseNode):
-        res = cls(state=state, api=api, node_class=node_class)
+    def all_nodes(cls, site=None, state=None, api=None,
+                  node_class=BaseNode, *args, **kwargs):
+        res = cls(site=site, state=state, api=api, node_class=node_class,
+                  *args, **kwargs)
         res.nodes = {args["network_address"]: node_class(api=res.api, **args)
                      for args in res._fetch_all_nodes(site=site)}
         return res
@@ -247,8 +249,8 @@ class BaseNodes(object):
 
 
 class NetworkedNodes(BaseNodes):
-    def __init__(self, site, edgelist_file=None, weight_distance=True,
-                 api=None):
+    def __init__(self, site, edgelist_file=None, state=None,
+                 weight_distance=True, api=None, node_class=BaseNode):
         """
         >>> import io
         >>> nodes = NetworkedNodes("grenoble",
@@ -274,7 +276,8 @@ class NetworkedNodes(BaseNodes):
         if edgelist_file is not None:
             self.network = networkx.read_edgelist(edgelist_file)
             super(NetworkedNodes, self).__init__(
-                [common.get_uri(site, n) for n in self.network.nodes()], api
+                [common.get_uri(site, n) for n in self.network.nodes()],
+                state, api, node_class
             )
             info = {n: self[n] for n in self.network.nodes()}
             networkx.set_node_attributes(self.network, info, "info")
@@ -285,7 +288,8 @@ class NetworkedNodes(BaseNodes):
                     self.network[n1][n2]["weight"] = info1.distance(info2)
         else:
             self.network = networkx.Graph()
-            super(NetworkedNodes, self).__init__()
+            super(NetworkedNodes, self).__init__(state=state,
+                                                 node_class=node_class)
 
     def __getitem__(self, node):
         return super(NetworkedNodes, self).__getitem__(
@@ -395,10 +399,11 @@ class NetworkedNodes(BaseNodes):
 
 
 class SinkNetworkedNodes(NetworkedNodes):
-    def __init__(self, site, sink, edgelist_file=None, weight_distance=True,
-                 api=None):
-        super(SinkNetworkedNodes, self).__init__(site, edgelist_file,
-                                                 weight_distance, api)
+    def __init__(self, site, sink, edgelist_file=None, state=None,
+                 weight_distance=True, api=None, node_class=BaseNode):
+        super(SinkNetworkedNodes, self).__init__(site, edgelist_file, state,
+                                                 weight_distance, api,
+                                                 node_class)
         self.sink = sink
 
     def __str__(self):
