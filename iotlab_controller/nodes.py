@@ -407,6 +407,7 @@ class SinkNetworkedNodes(NetworkedNodes):
                                                  weight_distance, api,
                                                  node_class)
         self.sink = sink
+        self.add(sink)
 
     def __str__(self):
         return "{}x{}".format(self.sink, self._network_digest())
@@ -430,10 +431,11 @@ class SinkNetworkedNodes(NetworkedNodes):
         m3-2.grenoble.iot-lab.info
         """
         sink_uri = common.get_uri(self.site, self.sink)
-        yield self.nodes[sink_uri]
+        # ensure sink to be first
+        yield self[sink_uri]
         for node in self.nodes:
             if node != sink_uri:
-                yield self.nodes[node]
+                yield self[node]
 
     @property
     def non_sink_node_uris(self):
