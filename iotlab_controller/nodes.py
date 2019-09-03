@@ -276,7 +276,8 @@ class NetworkedNodes(BaseNodes):
         """
         self.site = site
         if edgelist_file is not None:
-            self.network = networkx.read_edgelist(edgelist_file)
+            self.network = networkx.read_edgelist(edgelist_file,
+                                                  data=[("weight", float)])
             super(NetworkedNodes, self).__init__(
                 [common.get_uri(site, n) for n in self.network.nodes()],
                 state, api, node_class
