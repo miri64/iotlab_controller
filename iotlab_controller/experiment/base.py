@@ -112,11 +112,11 @@ class BaseExperiment(object):
             firmwares = self.firmwares
             profiles = self.profiles
             if firmwares is None:
-                firmwares = [None] * self.nodes
+                firmwares = [None] * len(self.nodes)
             elif len(firmwares) == 1:
                 firmwares *= len(self.nodes)
             if profiles is None:
-                profiles = [None] * self.nodes
+                profiles = [None] * len(self.nodes)
             elif len(profiles) == 1:
                 profiles *= len(self.nodes)
             return [
