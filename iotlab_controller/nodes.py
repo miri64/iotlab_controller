@@ -213,15 +213,17 @@ class BaseNodes(object):
 
     def flash(self, exp_id, firmware):
         return iotlabcli.node.node_command(self.api, "update", exp_id,
-                                           self.nodes, firmware.path)
+                                           [n.uri for n in self],
+                                           firmware.path)
 
     def reset(self, exp_id):
         return iotlabcli.node.node_command(self.api, "reset", exp_id,
-                                           self.nodes)
+                                           [n.uri for n in self])
 
     def profile(self, exp_id, profile):
         return iotlabcli.node.node_command(self.api, "profile", exp_id,
-                                           self.nodes, profile)
+                                           [n.uri for n in self],
+                                           profile)
 
     def select(self, nodes):
         """
@@ -470,13 +472,20 @@ class SinkNetworkedNodes(NetworkedNodes):
             return super(SinkNetworkedNodes, self).flash(exp_id, firmware)
         else:
             res1 = iotlabcli.node.node_command(
-                    self.api, "update", exp_id, self.non_sink_node_uris,
+                    self.api, "update", exp_id, list(self.non_sink_node_uris),
                     firmware.path
                 )
             res2 = iotlabcli.node.node_command(
-                    self.api, "update", exp_id, [self.sink], sink_firmware.path
+                    self.api, "update", exp_id,
+                    [common.get_uri(self.site, self.sink)],
+                    sink_firmware.path
                 )
-            res1.update(res2)
+            for res in ['0', '1']:
+                if res in res1 and res in res2:
+                    res1[res].extend(res2[res])
+                    res1[res].sort()
+                elif res not in res1 and res in res2:
+                    res1[res] = res2
             return res1
 
     def profile(self, exp_id, profile, sink_profile=None):
