@@ -32,14 +32,14 @@ class TmuxExperiment(base.BaseExperiment):
             cmd.extend(["-c", cwd])
         subprocess.run(cmd)
         self.tmux_server = libtmux.Server()
-        return self.tmux_server.find_where({"session_name": self.session_name})
+        return self.tmux_server.find_where({"session_name": session_name})
 
     def initialize_tmux_session(self, session_name, window_name=None,
                                 pane_id=None, cwd=None, env=None):
         if self.tmux_session is None:
             # find pane
             search_params = {
-                "session_name": self.session_name,
+                "session_name": session_name,
             }
             if window_name is not None:
                 search_params["window_name"] = window_name
@@ -53,9 +53,15 @@ class TmuxExperiment(base.BaseExperiment):
                         search_params
                     )
                 except libtmux.exc.LibTmuxException:
-                    self.tmux_session = self._create_tmux_session()
+                    self.tmux_session = self._create_tmux_session(session_name,
+                                                                  window_name,
+                                                                  pane_id,
+                                                                  cwd)
                 if self.tmux_session is None:
-                    self.tmux_session = self._create_tmux_session()
+                    self.tmux_session = self._create_tmux_session(session_name,
+                                                                  window_name,
+                                                                  pane_id,
+                                                                  cwd)
             # set environment
             if env is not None:
                 for k, v in env.items():
@@ -96,7 +102,7 @@ class TmuxExperiment(base.BaseExperiment):
             )
         if logname is not None:
             cmd += "| tee -a {}".format(logname)
-        self.send_keys(cmd, enter=True)
+        self.send_keys(cmd, enter=True, wait_after=2)
 
     def stop_serial_aggregator(self):
         self.hit_ctrl_c()
