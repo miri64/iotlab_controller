@@ -22,7 +22,7 @@ class RIOTFirmware(firmware.BaseFirmware):
         self.flashfile = flashfile
         if application_name is None:
             if application_path.endswith("/"):
-                application_path = application_path[:1]
+                application_path = application_path[:-1]
             self.application_name = os.path.basename(application_path)
         else:
             self.application_name = application_name
@@ -30,6 +30,9 @@ class RIOTFirmware(firmware.BaseFirmware):
         self.env["BOARD"] = board
         if env is not None:
             self.env.update(env)
+
+    def __repr__(self):
+        return "<{} at {}>".format(type(self).__name__, self.application_name)
 
     @property
     def path(self):
