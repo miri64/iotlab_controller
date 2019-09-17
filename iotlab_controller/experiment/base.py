@@ -120,7 +120,7 @@ class BaseExperiment(object):
             elif len(profiles) == 1:
                 profiles *= len(self.nodes)
             return [
-                iotlabcli.experiment.exp_resources(x[0].uri, x[1].path, x[2])
+                iotlabcli.experiment.exp_resources([x[0].uri], x[1].path, x[2])
                 for x in zip(self.nodes, firmwares, profiles)
             ]
 
