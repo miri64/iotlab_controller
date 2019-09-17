@@ -94,7 +94,7 @@ class BaseExperiment(object):
             raise ExperimentError(error_msg)
 
     def _get_resources(self):
-        if ((self.firmwares is None) or (len(self.firmwares) == 1)) or \
+        if ((self.firmwares is None) or (len(self.firmwares) == 1)) and \
            ((self.profiles is None) or (len(self.profiles) == 1)):
             firmware = None
             profile = None
@@ -120,7 +120,7 @@ class BaseExperiment(object):
             elif len(profiles) == 1:
                 profiles *= len(self.nodes)
             return [
-                iotlabcli.experiment.exp_resource(x[0].uri, x[1].path, x[2])
+                iotlabcli.experiment.exp_resources(x[0].uri, x[1].path, x[2])
                 for x in zip(self.nodes, firmwares, profiles)
             ]
 
