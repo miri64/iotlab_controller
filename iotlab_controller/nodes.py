@@ -80,6 +80,14 @@ class BaseNode(object):
         return iotlabcli.node.node_command(self.api, "reset", exp_id,
                                            [self.uri])
 
+    def start(self, exp_id):
+        return iotlabcli.node.node_command(self.api, "start", exp_id,
+                                           [self.uri])
+
+    def stop(self, exp_id):
+        return iotlabcli.node.node_command(self.api, "stop", exp_id,
+                                           [self.uri])
+
     def profile(self, exp_id, profile):
         return iotlabcli.node.node_command(self.api, "profile", exp_id,
                                            [self.uri], profile)
@@ -218,6 +226,14 @@ class BaseNodes(object):
 
     def reset(self, exp_id):
         return iotlabcli.node.node_command(self.api, "reset", exp_id,
+                                           [n.uri for n in self])
+
+    def start(self, exp_id):
+        return iotlabcli.node.node_command(self.api, "start", exp_id,
+                                           [n.uri for n in self])
+
+    def stop(self, exp_id):
+        return iotlabcli.node.node_command(self.api, "stop", exp_id,
                                            [n.uri for n in self])
 
     def profile(self, exp_id, profile):
