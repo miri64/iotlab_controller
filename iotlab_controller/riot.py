@@ -41,7 +41,7 @@ class RIOTFirmware(firmware.BaseFirmware):
         else:
             return self.flashfile
 
-    def run(self, build_env, cmd):
+    def _run(self, build_env, cmd):
         env = self.env.copy()
         if build_env is not None:
             env.update(build_env)
@@ -51,9 +51,14 @@ class RIOTFirmware(firmware.BaseFirmware):
             raise firmware.FirmwareBuildError(e)
 
     def build(self, build_env=None, threads=1):
-        self.run(build_env, ["make", "-j", str(threads), "-C",
+        self._run(build_env, ["make", "-j", str(threads), "-C",
                              self.application_path, "all"])
 
-    def clean(self, build_env=None, distclean=False):
-        op = "distclean" if distclean else "clean"
-        self.run(build_env, ["make", "-C", self.application_path, op])
+    def clean(self, build_env=None):
+        self._run(build_env, ["make", "-C", self.application_path, "clean"])
+
+    def distclean(application_path):
+        try:
+            subprocess.run(["make", "-C", application_path, "distclean"], check=True)
+        except subprocess.CalledProcessError as e:
+            raise firmware.FirmwareBuildError(e)
