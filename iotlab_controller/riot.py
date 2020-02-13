@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
 #
-# Copyright (C) 2019 Freie Universität Berlin
+# Copyright (C) 2019-2020 Freie Universität Berlin
 #
 # Distributed under terms of the MIT license.
 
@@ -41,23 +41,19 @@ class RIOTFirmware(firmware.BaseFirmware):
         else:
             return self.flashfile
 
-    def build(self, build_env=None, threads=1):
+    def run(self, build_env, cmd):
         env = self.env.copy()
         if build_env is not None:
             env.update(build_env)
         try:
-            subprocess.run(["make", "-j", str(threads), "-C",
-                           self.application_path, "all"],
-                           env=env, check=True)
+            subprocess.run(cmd, env=env, check=True)
         except subprocess.CalledProcessError as e:
             raise firmware.FirmwareBuildError(e)
 
-    def clean(self, build_env=None):
-        env = self.env.copy()
-        if build_env is not None:
-            env.update(build_env)
-        try:
-            subprocess.run(["make", "-C", self.application_path, "clean"],
-                           env=env, check=True)
-        except subprocess.CalledProcessError as e:
-            raise firmware.FirmwareBuildError(e)
+    def build(self, build_env=None, threads=1):
+        self.run(build_env, ["make", "-j", str(threads), "-C",
+                             self.application_path, "all"])
+
+    def clean(self, build_env=None, distclean=False):
+        op = "distclean" if distclean else "clean"
+        self.run(build_env, ["make", "-C", self.application_path, op])
