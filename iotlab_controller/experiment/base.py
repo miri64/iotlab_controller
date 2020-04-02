@@ -62,7 +62,10 @@ class BaseExperiment(object):
             api = common.get_default_api()
 
         def _get_exp(exp_id):
-            info = api.get_experiment_info(exp_id)
+            try:
+                info = api.get_experiment_info(exp_id)
+            except urllib.error.HTTPError as e:
+                raise ExperimentError(e.reason)
             nodes = nodes_class(node_list=info["nodes"], api=api,
                                 node_class=node_class)
             return cls(name=info["name"], nodes=nodes, target=target,
@@ -77,7 +80,10 @@ class BaseExperiment(object):
             yield _get_exp(exp_id)
 
     def _check_experiment(self):
-        exp = iotlabcli.experiment.get_experiment(self.api, self.exp_id)
+        try:
+            exp = iotlabcli.experiment.get_experiment(self.api, self.exp_id)
+        except urllib.error.HTTPError as e:
+            raise ExperimentError(e.reason)
         if exp["state"] in ["Error", "Terminated", "Stopped"]:
             raise ExperimentError(
                 "{} terminated or had an error".format(self)
