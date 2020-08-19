@@ -73,7 +73,7 @@ class BaseNode(object):
                          (self.z - other.z) ** 2)
 
     def flash(self, exp_id, firmware):
-        return iotlabcli.node.node_command(self.api, "update", exp_id,
+        return iotlabcli.node.node_command(self.api, "flash", exp_id,
                                            [self.uri], firmware.path)
 
     def reset(self, exp_id):
@@ -220,7 +220,7 @@ class BaseNodes(object):
         raise NodeError("Can't load node information on {}".format(node))
 
     def flash(self, exp_id, firmware):
-        return iotlabcli.node.node_command(self.api, "update", exp_id,
+        return iotlabcli.node.node_command(self.api, "flash", exp_id,
                                            [n.uri for n in self],
                                            firmware.path)
 
@@ -488,11 +488,11 @@ class SinkNetworkedNodes(NetworkedNodes):
             return super(SinkNetworkedNodes, self).flash(exp_id, firmware)
         else:
             res1 = iotlabcli.node.node_command(
-                    self.api, "update", exp_id, list(self.non_sink_node_uris),
+                    self.api, "flash", exp_id, list(self.non_sink_node_uris),
                     firmware.path
                 )
             res2 = iotlabcli.node.node_command(
-                    self.api, "update", exp_id,
+                    self.api, "flash", exp_id,
                     [common.get_uri(self.site, self.sink)],
                     sink_firmware.path
                 )
