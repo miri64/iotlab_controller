@@ -57,7 +57,7 @@ class BaseNode(object):
 
     @property
     def state(self):
-        nodes = self.api.get_resources(site=self.site,
+        nodes = self.api.get_nodes(site=self.site,
                                        archi=self.arch)["items"]
         for node in nodes:
             if node["network_address"] == self.uri:
@@ -199,7 +199,7 @@ class BaseNodes(object):
             kwargs["state"] = self.state
         if site is not None:
             kwargs["site"] = site
-        return self.api.get_resources(**kwargs)["items"]
+        return self.api.get_nodes(**kwargs)["items"]
 
     def add(self, node):
         """
