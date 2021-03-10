@@ -123,9 +123,11 @@ class BaseNodes:
             self.api = common.get_default_api()
         else:
             self.api = api
-        self.nodes = {args["network_address"]: node_class(api=self.api, **args)
-                      for args in self._fetch_all_nodes()
-                      if args["network_address"] in node_list}
+        self.nodes = {
+            args["network_address"]: node_class.from_dict(args, api=self.api)
+            for args in self._fetch_all_nodes()
+            if args["network_address"] in node_list
+        }
         self.node_class = node_class
         self.iter_idx = -1
 
@@ -186,12 +188,14 @@ class BaseNodes:
                   node_class=BaseNode, **kwargs):
         # pylint: disable=unexpected-keyword-arg
         # Maybe fix later
-        res = cls(site=site, state=state, api=api, node_class=node_class,
+        res = cls(state=state, api=api, node_class=node_class,
                   *args, **kwargs)
         # pylint: disable=protected-access
         # Access to protected method of class within class method
-        res.nodes = {args["network_address"]: node_class(api=res.api, **args)
-                     for args in res._fetch_all_nodes(site=site, archi=archi)}
+        res.nodes = {
+            args["network_address"]: node_class.from_dict(args, api=res.api)
+            for args in res._fetch_all_nodes(site=site, archi=archi)
+        }
         return res
 
     @classmethod
@@ -224,7 +228,7 @@ class BaseNodes:
             return
         for args in self._fetch_all_nodes():
             if args["network_address"] == node:
-                res = self.node_class(api=self.api, **args)
+                res = self.node_class.from_dict(args, api=self.api)
                 self.nodes[node] = res
                 return
         raise NodeError("Can't load node information on {}".format(node))
@@ -274,7 +278,7 @@ class BaseNodes:
     @classmethod
     def from_json(cls, obj, state=None, api=None, node_class=BaseNode):
         nodes = json.loads(obj)
-        nodes = {k: node_class.from_repr_json(v) for k, v in nodes.items()}
+        nodes = {k: node_class.from_dict(v, api) for k, v in nodes.items()}
         return cls._from_existing_nodes(nodes, state, api, node_class)
 
 
@@ -356,8 +360,28 @@ class NetworkedNodes(BaseNodes):
         super().__delitem__(uri)
 
     def __add__(self, other):
+        """
+        >>> import io
+        >>> nodes = NetworkedNodes("grenoble", io.BytesIO(b"m3-1 m3-2 2"))
+        >>> nodes += NetworkedNodes("grenoble", io.BytesIO(b"m3-2 m3-3 1"))
+        >>> for n in sorted(nodes, key=lambda n: n.uri):
+        ...     print(n.uri)
+        m3-1.grenoble.iot-lab.info
+        m3-2.grenoble.iot-lab.info
+        m3-3.grenoble.iot-lab.info
+        """
         res = super().__add__(other)
         res.network = networkx.compose(self.network, other.network)
+        return res
+
+    @classmethod
+    def _from_existing_nodes(cls, nodes, site=None, state=None, api=None,
+                             node_class=BaseNode):
+        # pylint: disable=too-many-arguments,arguments-differ
+        # Maybe fix later
+        # Adds additional, but optional arguments
+        res = cls(site=site, state=state, api=api, node_class=node_class)
+        res.nodes = nodes
         return res
 
     def _network_digest(self):
@@ -391,7 +415,7 @@ class NetworkedNodes(BaseNodes):
             node = uri.split(".")[0]
         else:
             uri = common.get_uri(self.site, node)
-        if node in self.nodes:
+        if uri in self.nodes:
             return
         super().add(uri)
         info = self[node]
@@ -428,7 +452,10 @@ class NetworkedNodes(BaseNodes):
         return self.network.neighbors(node)
 
     def select(self, nodes):
-        res = super().select([common.get_uri(self.site, n) for n in nodes])
+        res = super().select([
+            n if self._is_uri(n) else common.get_uri(self.site, n)
+            for n in nodes
+        ])
         res.network = networkx.Graph(self.network.subgraph(nodes))
         return res
 
@@ -514,7 +541,7 @@ class SinkNetworkedNodes(NetworkedNodes):
                 res1[res].extend(res2[res])
                 res1[res].sort()
             elif res not in res1 and res in res2:
-                res1[res] = res2
+                res1[res] = res2[res]
         return res1
 
     def profile(self, exp_id, profile, sink_profile=None):
@@ -523,12 +550,18 @@ class SinkNetworkedNodes(NetworkedNodes):
         if sink_profile is None:
             return super().profile(exp_id, profile)
         res1 = iotlabcli.node.node_command(
-                self.api, "profile", exp_id, self.non_sink_node_uris,
+                self.api, "profile", exp_id, list(self.non_sink_node_uris),
                 profile
             )
         res2 = iotlabcli.node.node_command(
-                self.api, "profile", exp_id, [self.sink],
+                self.api, "profile", exp_id,
+                [common.get_uri(self.site, self.sink)],
                 sink_profile
             )
-        res1.update(res2)
+        for res in ['0', '1']:
+            if res in res1 and res in res2:
+                res1[res].extend(res2[res])
+                res1[res].sort()
+            elif res not in res1 and res in res2:
+                res1[res] = res2[res]
         return res1
