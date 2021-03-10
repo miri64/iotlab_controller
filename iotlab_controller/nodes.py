@@ -287,7 +287,7 @@ class NetworkedNodes(BaseNodes):
         >>> import io
         >>> nodes = NetworkedNodes("grenoble",
         ...     io.BytesIO(
-        ...         b"m3-1 m3-2 {'weight': 2}\\nm3-2 m3-3 {'weight': 1}"
+        ...         b"m3-1 m3-2 2\\nm3-2 m3-3 1"
         ...     )
         ... )
         >>> for n in sorted(nodes, key=lambda n: n.uri):
@@ -334,7 +334,7 @@ class NetworkedNodes(BaseNodes):
         >>> import io
         >>> nodes = NetworkedNodes("grenoble",
         ...     io.BytesIO(
-        ...         b"m3-1 m3-2 {'weight': 2}\\nm3-2 m3-3 {'weight': 1}"
+        ...         b"m3-1 m3-2 2\\nm3-2 m3-3 1"
         ...     )
         ... )
         >>> del nodes["m3-1"]
@@ -437,7 +437,7 @@ class NetworkedNodes(BaseNodes):
         >>> import io
         >>> nodes = NetworkedNodes("grenoble",
         ...     io.BytesIO(
-        ...         b"m3-1 m3-2 {'weight': 2}\\nm3-2 m3-3 {'weight': 1}"
+        ...         b"m3-1 m3-2 2\\nm3-2 m3-3 1"
         ...     )
         ... )
         >>> out = io.BytesIO()
@@ -466,7 +466,7 @@ class SinkNetworkedNodes(NetworkedNodes):
         >>> import io
         >>> nodes = SinkNetworkedNodes("grenoble", "m3-2",
         ...     io.BytesIO(
-        ...         b"m3-1 m3-2 {'weight': 2}\\nm3-2 m3-3 {'weight': 1}"
+        ...         b"m3-1 m3-2 2\\nm3-2 m3-3 1"
         ...     )
         ... )
         >>> for n in sorted(nodes, key=lambda n: n.uri):
