@@ -7,8 +7,6 @@
 # Distributed under terms of the MIT license.
 
 from setuptools import setup, find_packages
-import os
-import sys
 
 name = "iotlab_controller"
 version = "0.4.3a"
@@ -17,11 +15,12 @@ author = "Martine Lenders"
 author_email = "m.lenders@fu-berlin.de"
 url = "https://github.com/miri64/iotlab_controller"
 
+
 def get_requirements():
-    with open(os.path.join(os.path.dirname(sys.argv[0]),
-                           "requirements.txt")) as req_file:
+    with open("requirements.txt") as req_file:
         for line in req_file:
             yield line.strip()
+
 
 extras_require = {
     "networked": ["networkx>=2.2"],
@@ -38,7 +37,7 @@ setup(
     name=name,
     version=version,
     description=description,
-    packages=find_packages(),
+    packages=find_packages(exclude=("tests",)),
 
     author=author,
     author_email=author_email,
