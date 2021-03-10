@@ -307,6 +307,17 @@ class NetworkedNodes(BaseNodes):
         >>> nodes = NetworkedNodes("grenoble")
         >>> len(nodes)
         0
+        >>> nodes = NetworkedNodes("grenoble",
+        ...     io.BytesIO(
+        ...         b"m3-1 m3-2 2\\nm3-2 m3-3 1"
+        ...     ),
+        ...     weight_distance=False,
+        ... )
+        >>> for n in sorted(nodes, key=lambda n: n.uri):
+        ...     print(n.uri)
+        m3-1.grenoble.iot-lab.info
+        m3-2.grenoble.iot-lab.info
+        m3-3.grenoble.iot-lab.info
         """
         self.site = site
         if edgelist_file is not None:
@@ -403,12 +414,16 @@ class NetworkedNodes(BaseNodes):
         """
         >>> nodes = NetworkedNodes("saclay")
         >>> nodes.add("m3-1")
+        >>> nodes.add("m3-1.saclay.iot-lab.info")
+        >>> nodes.add("m3-2.saclay.iot-lab.info")
         >>> for n in sorted(nodes, key=lambda n: n.uri):
         ...     print(n.uri)
         m3-1.saclay.iot-lab.info
+        m3-2.saclay.iot-lab.info
         >>> for n in sorted(nodes.network.nodes()):
         ...     print(nodes.network.nodes[n]["info"].uri)
         m3-1.saclay.iot-lab.info
+        m3-2.saclay.iot-lab.info
         """
         if self._is_uri(node):
             uri = node
@@ -452,6 +467,19 @@ class NetworkedNodes(BaseNodes):
         return self.network.neighbors(node)
 
     def select(self, nodes):
+        """
+        >>> import io
+        >>> nodes = NetworkedNodes("grenoble",
+        ...     io.BytesIO(
+        ...         b"m3-1 m3-2 2\\nm3-2 m3-3 1"
+        ...     )
+        ... )
+        >>> nodes = nodes.select(['m3-2', 'm3-3.grenoble.iot-lab.info'])
+        >>> for n in sorted(nodes, key=lambda n: n.uri):
+        ...     print(n.uri)
+        m3-2.grenoble.iot-lab.info
+        m3-3.grenoble.iot-lab.info
+        """
         res = super().select([
             n if self._is_uri(n) else common.get_uri(self.site, n)
             for n in nodes
