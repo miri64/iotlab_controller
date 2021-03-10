@@ -5,6 +5,8 @@
 #
 # Distributed under terms of the MIT license.
 
+import urllib
+
 import iotlabcli.auth
 import iotlabcli.experiment
 
@@ -16,9 +18,14 @@ class ExperimentError(Exception):
     pass
 
 
-class BaseExperiment(object):
-    def __init__(self, name, nodes, target=None, firmwares=None, exp_id=None,
-                 profiles=None, api=None, *args, **kwargs):
+class BaseExperiment:
+    # pylint: disable=too-many-instance-attributes
+    # Maybe fix later
+    def __init__(self, name, nodes, *args, target=None, firmwares=None,
+                 exp_id=None, profiles=None, api=None, **kwargs):
+        # pylint: disable=redefined-outer-name
+        # nodes module is not used in this constructor, so it is safe to
+        # redefine the name as a variable
         if (firmwares is not None) and \
            (len(firmwares) > 1) and (len(nodes) != len(firmwares)):
             raise ExperimentError(
@@ -54,9 +61,9 @@ class BaseExperiment(object):
                                                self.name)
 
     @classmethod
-    def iter_experiments(cls, include_waiting=False, target=None,
+    def iter_experiments(cls, *args, include_waiting=False, target=None,
                          api=None, nodes_class=nodes.BaseNodes,
-                         node_class=nodes.BaseNode, *args, **kwargs):
+                         node_class=nodes.BaseNode, **kwargs):
 
         if api is None:
             api = common.get_default_api()
@@ -64,11 +71,11 @@ class BaseExperiment(object):
         def _get_exp(exp_id):
             try:
                 info = api.get_experiment_info(exp_id)
-            except urllib.error.HTTPError as e:
-                raise ExperimentError(e.reason)
-            nodes = nodes_class(node_list=info["nodes"], api=api,
-                                node_class=node_class)
-            return cls(name=info["name"], nodes=nodes, target=target,
+            except urllib.error.HTTPError as exc:
+                raise ExperimentError(exc.reason) from exc
+            nodes_ = nodes_class(node_list=info["nodes"], api=api,
+                                 node_class=node_class)
+            return cls(name=info["name"], nodes=nodes_, target=target,
                        exp_id=exp_id, api=api, *args, **kwargs)
 
         exps = iotlabcli.experiment.get_active_experiments(
@@ -82,8 +89,8 @@ class BaseExperiment(object):
     def _check_experiment(self):
         try:
             exp = iotlabcli.experiment.get_experiment(self.api, self.exp_id)
-        except urllib.error.HTTPError as e:
-            raise ExperimentError(e.reason)
+        except urllib.error.HTTPError as exc:
+            raise ExperimentError(exc.reason) from exc
         if exp["state"] in ["Error", "Terminated", "Stopped"]:
             raise ExperimentError(
                 "{} terminated or had an error".format(self)
@@ -114,21 +121,20 @@ class BaseExperiment(object):
                     firmware, profile
                 )
             ]
-        else:
-            firmwares = self.firmwares
-            profiles = self.profiles
-            if firmwares is None:
-                firmwares = [None] * len(self.nodes)
-            elif len(firmwares) == 1:
-                firmwares *= len(self.nodes)
-            if profiles is None:
-                profiles = [None] * len(self.nodes)
-            elif len(profiles) == 1:
-                profiles *= len(self.nodes)
-            return [
-                iotlabcli.experiment.exp_resources([x[0].uri], x[1].path, x[2])
-                for x in zip(self.nodes, firmwares, profiles)
-            ]
+        firmwares = self.firmwares
+        profiles = self.profiles
+        if firmwares is None:
+            firmwares = [None] * len(self.nodes)
+        elif len(firmwares) == 1:
+            firmwares *= len(self.nodes)
+        if profiles is None:
+            profiles = [None] * len(self.nodes)
+        elif len(profiles) == 1:
+            profiles *= len(self.nodes)
+        return [
+            iotlabcli.experiment.exp_resources([x[0].uri], x[1].path, x[2])
+            for x in zip(self.nodes, firmwares, profiles)
+        ]
 
     def is_scheduled(self):
         return self.exp_id is not None

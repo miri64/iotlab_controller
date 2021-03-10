@@ -6,17 +6,19 @@
 #
 # Distributed under terms of the MIT license.
 
-import libtmux
 import logging
 import subprocess
 import time
 
+import libtmux
+
 from ..constants import IOTLAB_DOMAIN
 from ..experiment import base
 
+
 class TmuxExperiment(base.BaseExperiment):
-    def __init__(self, name, nodes, target=None, firmwares=None, exp_id=None,
-                 profiles=None, api=None, *args, **kwargs):
+    def __init__(self, name, nodes, *args, target=None, firmwares=None,
+                 exp_id=None, profiles=None, api=None, **kwargs):
         super().__init__(name=name, nodes=nodes, target=target,
                          firmwares=firmwares, exp_id=exp_id, profiles=profiles,
                          api=api, *args, **kwargs)
@@ -24,18 +26,36 @@ class TmuxExperiment(base.BaseExperiment):
         self.tmux_session = None
 
     def _create_tmux_session(self, session_name, window_name=None,
-                             pane_id=None, cwd=None):
+                             cwd=None):
         cmd = ["tmux", "new-session", "-d", "-s", session_name]
         if window_name is not None:
             cmd.extend(["-n", window_name])
         if cwd is not None:
             cmd.extend(["-c", cwd])
-        subprocess.run(cmd)
+        subprocess.run(cmd, check=True)
         self.tmux_server = libtmux.Server()
         return self.tmux_server.find_where({"session_name": session_name})
 
+    def _find_or_create_tmux_session(self, session_name, search_params,
+                                     window_name=None, cwd=None):
+        while self.tmux_session is None:
+            try:
+                self.tmux_session = self.tmux_server.find_where(
+                    search_params
+                )
+            except libtmux.exc.LibTmuxException:
+                self.tmux_session = self._create_tmux_session(session_name,
+                                                              window_name,
+                                                              cwd)
+            if self.tmux_session is None:
+                self.tmux_session = self._create_tmux_session(session_name,
+                                                              window_name,
+                                                              cwd)
+
     def initialize_tmux_session(self, session_name, window_name=None,
                                 pane_id=None, cwd=None, env=None):
+        # pylint: disable=too-many-arguments
+        # Maybe fix later
         if self.tmux_session is None:
             # find pane
             search_params = {
@@ -46,26 +66,12 @@ class TmuxExperiment(base.BaseExperiment):
             if pane_id is not None:
                 search_params["pane_id"] = pane_id
 
-            # find or create TMUX session
-            while self.tmux_session is None:
-                try:
-                    self.tmux_session = self.tmux_server.find_where(
-                        search_params
-                    )
-                except libtmux.exc.LibTmuxException:
-                    self.tmux_session = self._create_tmux_session(session_name,
-                                                                  window_name,
-                                                                  pane_id,
-                                                                  cwd)
-                if self.tmux_session is None:
-                    self.tmux_session = self._create_tmux_session(session_name,
-                                                                  window_name,
-                                                                  pane_id,
-                                                                  cwd)
+            self._find_or_create_tmux_session(session_name, search_params,
+                                              window_name=window_name, cwd=cwd)
             # set environment
             if env is not None:
-                for k, v in env.items():
-                    self.tmux_session.set_environment(k, v)
+                for key, value in env.items():
+                    self.tmux_session.set_environment(key, value)
             # find pane
             if window_name is not None:
                 self.tmux_session = self.tmux_session.find_where(search_params)

@@ -1,15 +1,13 @@
-# -*- coding: utf-8 -*-
-# vim:fenc=utf-8
-#
-# Copyright (C) 2019 Freie Universität Berlin
+# Copyright (C) 2019-21 Freie Universität Berlin
 #
 # Distributed under terms of the MIT license.
 
-import iotlabcli.node
 import hashlib
 import json
 import logging
 import math
+
+import iotlabcli.node
 try:
     import networkx
 except ImportError:
@@ -23,9 +21,13 @@ class NodeError(Exception):
     pass
 
 
-class BaseNode(object):
+class BaseNode:
+    # pylint: disable=too-many-instance-attributes
+    # Maybe fix later
     def __init__(self, api, archi, mobile, mobility_type, network_address,
                  site, uid, x, y, z, *args, **kwargs):
+        # pylint: disable=too-many-arguments, unused-argument
+        # Maybe fix later
         self.arch = archi
         self.mobile = mobile != 0
         if mobility_type.strip() != "":
@@ -40,6 +42,8 @@ class BaseNode(object):
             self.uid = None
         if (x.strip() == "") or (y.strip() == "") or \
            (z.strip() == ""):
+            # pylint: disable=invalid-name
+            # These are coordinates...
             self.x = None
             self.y = None
             self.z = None
@@ -58,7 +62,7 @@ class BaseNode(object):
     @property
     def state(self):
         nodes = self.api.get_nodes(site=self.site,
-                                       archi=self.arch)["items"]
+                                   archi=self.arch)["items"]
         for node in nodes:
             if node["network_address"] == self.uri:
                 return node["state"]
@@ -109,9 +113,11 @@ class BaseNode(object):
         return cls.from_dict(json.loads(obj), api)
 
 
-class BaseNodes(object):
-    def __init__(self, node_list=[], state=None, api=None,
+class BaseNodes:
+    def __init__(self, node_list=None, state=None, api=None,
                  node_class=BaseNode):
+        if node_list is None:
+            node_list = []
         self.state = state
         if api is None:
             self.api = common.get_default_api()
@@ -176,10 +182,14 @@ class BaseNodes(object):
                                          self.node_class)
 
     @classmethod
-    def all_nodes(cls, site=None, state=None, archi=None, api=None,
-                  node_class=BaseNode, *args, **kwargs):
+    def all_nodes(cls, *args, site=None, state=None, archi=None, api=None,
+                  node_class=BaseNode, **kwargs):
+        # pylint: disable=unexpected-keyword-arg
+        # Maybe fix later
         res = cls(site=site, state=state, api=api, node_class=node_class,
                   *args, **kwargs)
+        # pylint: disable=protected-access
+        # Access to protected method of class within class method
         res.nodes = {args["network_address"]: node_class(api=res.api, **args)
                      for args in res._fetch_all_nodes(site=site, archi=archi)}
         return res
@@ -253,8 +263,8 @@ class BaseNodes(object):
         m3-1.lille.iot-lab.info
         m3-2.lille.iot-lab.info
         """
-        ns = {k: v for k, v in self.nodes.copy().items() if k in nodes}
-        return self._from_existing_nodes(ns, self.state, self.api,
+        nodes_ = {k: v for k, v in self.nodes.copy().items() if k in nodes}
+        return self._from_existing_nodes(nodes_, self.state, self.api,
                                          self)
 
     def to_json(self):
@@ -271,6 +281,8 @@ class BaseNodes(object):
 class NetworkedNodes(BaseNodes):
     def __init__(self, site, edgelist_file=None, state=None,
                  weight_distance=True, api=None, node_class=BaseNode):
+        # pylint: disable=too-many-arguments
+        # Maybe fix later
         """
         >>> import io
         >>> nodes = NetworkedNodes("grenoble",
@@ -296,26 +308,26 @@ class NetworkedNodes(BaseNodes):
         if edgelist_file is not None:
             self.network = networkx.read_edgelist(edgelist_file,
                                                   data=[("weight", float)])
-            super(NetworkedNodes, self).__init__(
+            super().__init__(
                 [common.get_uri(site, n) for n in self.network.nodes()],
                 state, api, node_class
             )
             info = {n: self[n] for n in self.network.nodes()}
             networkx.set_node_attributes(self.network, info, "info")
             if weight_distance:
-                for n1, n2 in self.network.edges():
-                    info1 = self[n1]
-                    info2 = self[n2]
-                    self.network[n1][n2]["weight"] = info1.distance(info2)
+                for node1, node2 in self.network.edges():
+                    info1 = self[node1]
+                    info2 = self[node2]
+                    edge = self.network[node1][node2]
+                    edge["weight"] = info1.distance(info2)
         else:
             self.network = networkx.Graph()
-            super(NetworkedNodes, self).__init__(state=state,
-                                                 node_class=node_class)
+            super().__init__(state=state, node_class=node_class)
 
     def __getitem__(self, node):
         if not self._is_uri(node):
             node = common.get_uri(self.site, node)
-        return super(NetworkedNodes, self).__getitem__(node)
+        return super().__getitem__(node)
 
     def __delitem__(self, node):
         """
@@ -341,10 +353,10 @@ class NetworkedNodes(BaseNodes):
         else:
             uri = common.get_uri(self.site, node)
         self.network.remove_node(node)
-        super(NetworkedNodes, self).__delitem__(uri)
+        super().__delitem__(uri)
 
     def __add__(self, other):
-        res = super(NetworkedNodes, self).__add__(other)
+        res = super().__add__(other)
         res.network = networkx.compose(self.network, other.network)
         return res
 
@@ -381,7 +393,7 @@ class NetworkedNodes(BaseNodes):
             uri = common.get_uri(self.site, node)
         if node in self.nodes:
             return
-        super(NetworkedNodes, self).add(uri)
+        super().add(uri)
         info = self[node]
         self.network.add_node(node, info=info)
 
@@ -416,8 +428,7 @@ class NetworkedNodes(BaseNodes):
         return self.network.neighbors(node)
 
     def select(self, nodes):
-        res = super(NetworkedNodes, self).select([common.get_uri(n)
-                                                  for n in nodes])
+        res = super().select([common.get_uri(self.site, n) for n in nodes])
         res.network = networkx.Graph(self.network.subgraph(nodes))
         return res
 
@@ -440,9 +451,10 @@ class NetworkedNodes(BaseNodes):
 class SinkNetworkedNodes(NetworkedNodes):
     def __init__(self, site, sink, edgelist_file=None, state=None,
                  weight_distance=True, api=None, node_class=BaseNode):
-        super(SinkNetworkedNodes, self).__init__(site, edgelist_file, state,
-                                                 weight_distance, api,
-                                                 node_class)
+        # pylint: disable=too-many-arguments
+        # Maybe fix later
+        super().__init__(site, edgelist_file, state, weight_distance, api,
+                         node_class)
         self.sink = sink
         self.add(sink)
 
@@ -484,37 +496,39 @@ class SinkNetworkedNodes(NetworkedNodes):
         return [n for n in self.network.nodes() if n != self.sink]
 
     def flash(self, exp_id, firmware, sink_firmware=None):
+        # pylint: disable=arguments-differ
+        # Adds additional, but optional arguments
         if sink_firmware is None:
-            return super(SinkNetworkedNodes, self).flash(exp_id, firmware)
-        else:
-            res1 = iotlabcli.node.node_command(
-                    self.api, "flash", exp_id, list(self.non_sink_node_uris),
-                    firmware.path
-                )
-            res2 = iotlabcli.node.node_command(
-                    self.api, "flash", exp_id,
-                    [common.get_uri(self.site, self.sink)],
-                    sink_firmware.path
-                )
-            for res in ['0', '1']:
-                if res in res1 and res in res2:
-                    res1[res].extend(res2[res])
-                    res1[res].sort()
-                elif res not in res1 and res in res2:
-                    res1[res] = res2
-            return res1
+            return super().flash(exp_id, firmware)
+        res1 = iotlabcli.node.node_command(
+                self.api, "flash", exp_id, list(self.non_sink_node_uris),
+                firmware.path
+            )
+        res2 = iotlabcli.node.node_command(
+                self.api, "flash", exp_id,
+                [common.get_uri(self.site, self.sink)],
+                sink_firmware.path
+            )
+        for res in ['0', '1']:
+            if res in res1 and res in res2:
+                res1[res].extend(res2[res])
+                res1[res].sort()
+            elif res not in res1 and res in res2:
+                res1[res] = res2
+        return res1
 
     def profile(self, exp_id, profile, sink_profile=None):
+        # pylint: disable=arguments-differ
+        # Adds additional, but optional arguments
         if sink_profile is None:
-            return super(SinkNetworkedNodes, self).profile(exp_id, profile)
-        else:
-            res1 = iotlabcli.node.node_command(
-                    self.api, "profile", exp_id, self.non_sink_node_uris,
-                    profile
-                )
-            res2 = iotlabcli.node.node_command(
-                    self.api, "profile", exp_id, [self.sink],
-                    sink_profile
-                )
-            res1.update(res2)
-            return res1
+            return super().profile(exp_id, profile)
+        res1 = iotlabcli.node.node_command(
+                self.api, "profile", exp_id, self.non_sink_node_uris,
+                profile
+            )
+        res2 = iotlabcli.node.node_command(
+                self.api, "profile", exp_id, [self.sink],
+                sink_profile
+            )
+        res1.update(res2)
+        return res1

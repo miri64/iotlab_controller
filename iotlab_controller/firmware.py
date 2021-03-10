@@ -11,7 +11,7 @@ class FirmwareBuildError(Exception):
     pass
 
 
-class BaseFirmware(object):
+class BaseFirmware:
     @property
     def path(self):
         raise NotImplementedError()

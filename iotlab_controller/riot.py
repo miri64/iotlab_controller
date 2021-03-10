@@ -17,6 +17,8 @@ class RIOTFirmware(firmware.BaseFirmware):
 
     def __init__(self, application_path, board, application_name=None,
                  flashfile=None, env=None):
+        # pylint: disable=too-many-arguments
+        # Maybe fixed later
         self.application_path = application_path
         self.board = board
         self.flashfile = flashfile
@@ -41,8 +43,7 @@ class RIOTFirmware(firmware.BaseFirmware):
                                 "bin", self.board,
                                 "{}.{}".format(self.application_name,
                                                RIOTFirmware.FILE_EXTENSION))
-        else:
-            return self.flashfile
+        return self.flashfile
 
     def _run(self, build_env, cmd):
         env = self.env.copy()
@@ -50,18 +51,25 @@ class RIOTFirmware(firmware.BaseFirmware):
             env.update(build_env)
         try:
             subprocess.run(cmd, env=env, check=True)
-        except subprocess.CalledProcessError as e:
-            raise firmware.FirmwareBuildError(e)
+        except subprocess.CalledProcessError as exc:
+            raise firmware.FirmwareBuildError(exc)
 
     def build(self, build_env=None, threads=1):
-        self._run(build_env, ["make", "-j", str(threads), "-C",
-                             self.application_path, "all"])
+        # pylint: disable=arguments-differ
+        # Adds additional, but optional arguments
+        self._run(build_env, [
+            "make", "-j", str(threads), "-C", self.application_path, "all"
+        ])
 
     def clean(self, build_env=None):
+        # pylint: disable=arguments-differ
+        # Adds additional, but optional arguments
         self._run(build_env, ["make", "-C", self.application_path, "clean"])
 
+    @staticmethod
     def distclean(application_path):
         try:
-            subprocess.run(["make", "-C", application_path, "distclean"], check=True)
-        except subprocess.CalledProcessError as e:
-            raise firmware.FirmwareBuildError(e)
+            subprocess.run(["make", "-C", application_path, "distclean"],
+                           check=True)
+        except subprocess.CalledProcessError as exc:
+            raise firmware.FirmwareBuildError(exc)
