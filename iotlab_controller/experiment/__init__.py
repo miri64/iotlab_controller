@@ -1,8 +1,4 @@
-#! /usr/bin/env python
-# -*- coding: utf-8 -*-
-# vim:fenc=utf-8
-#
-# Copyright © 2019 Martine Lenders <m.lenders@fu-berlin.de>
+# Copyright (C) 2019-21 Freie Universität Berlin
 #
 # Distributed under terms of the MIT license.
 
