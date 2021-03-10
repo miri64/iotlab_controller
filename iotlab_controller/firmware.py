@@ -2,18 +2,23 @@
 #
 # Distributed under terms of the MIT license.
 
+import abc
+
 
 class FirmwareBuildError(Exception):
     pass
 
 
-class BaseFirmware:
+class BaseFirmware(abc.ABC):
     @property
+    @abc.abstractmethod
     def path(self):
         raise NotImplementedError()
 
+    @abc.abstractmethod
     def build(self):
         raise NotImplementedError()
 
+    @abc.abstractmethod
     def clean(self):
         raise NotImplementedError()
