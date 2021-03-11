@@ -68,17 +68,9 @@ def test_tmux_experiment_init_session(tmux_exp, window_name, pane_id,
     tmux_sessions = [s for s in tmux_exp.tmux_server.list_sessions()
                      if s.name == 'test-session']
     assert len(tmux_sessions) == 1
-    tmux_session = tmux_sessions[0]
-    # it has one window
-    assert len(tmux_session.windows) == 1
-    # which has the provided name (if a name is provided)
-    tmux_window = tmux_session.windows[0]
-    assert not window_name or tmux_window.name == window_name
-    # it has one pane
-    assert len(tmux_window.panes) == 1
-    # which has the provided ID (if an ID is provided)
-    tmux_pane = tmux_window.panes[0]
-    assert not pane_id or tmux_pane.id == pane_id
+    assert session.window.session == tmux_sessions[0]
+    assert not window_name or session.window.name == window_name
+    assert not pane_id or session.id == pane_id
     if cwd:
         tmux_exp.cmd('pwd')
         # capture_pane() provides a list of lines, check if cwd is in it.
