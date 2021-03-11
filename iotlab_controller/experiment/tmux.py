@@ -49,7 +49,7 @@ class TmuxExperiment(base.BaseExperiment):
                                                               cwd)
 
     def initialize_tmux_session(self, session_name, window_name=None,
-                                pane_id=None, cwd=None, env=None):
+                                pane_id=None, cwd=None):
         # pylint: disable=too-many-arguments
         # Maybe fix later
         if self.tmux_session is None:
@@ -64,10 +64,6 @@ class TmuxExperiment(base.BaseExperiment):
 
             self._find_or_create_tmux_session(session_name, search_params,
                                               window_name=window_name, cwd=cwd)
-            # set environment
-            if env is not None:
-                for key, value in env.items():
-                    self.tmux_session.set_environment(key, value)
             # find pane
             if window_name is not None:
                 self.tmux_session = self.tmux_session.find_where(search_params)
