@@ -6,6 +6,7 @@
 
 import libtmux.exc
 import pytest
+import time
 
 import iotlab_controller.experiment.tmux
 
@@ -75,7 +76,7 @@ def test_tmux_experiment_init_session(tmux_exp, window_name, pane_id,
     assert not window_name or session.window.name == window_name
     assert not pane_id or session.id == pane_id
     if cwd:
-        tmux_exp.cmd('pwd')
+        tmux_exp.cmd('pwd', wait_after=1)
         # capture_pane() provides a list of lines, check if cwd is in it.
         assert cwd in tmux_exp.tmux_session.capture_pane()
     new_session = tmux_exp.initialize_tmux_session('test-session', window_name,
@@ -146,12 +147,10 @@ def test_tmux_experiment_send_keys_wo_session(tmux_exp):
 
 
 def test_tmux_experiment_send_keys_success(mocker, tmux_exp):
-    sleep = mocker.patch('time.sleep')
     tmux_exp.initialize_tmux_session('test-session')
-    tmux_exp.send_keys('echo "test"', enter=True, wait_after=1337)
+    tmux_exp.send_keys('echo "test"', enter=True, wait_after=1)
     # capture_pane() provides a list of lines, check if 'test' is in it.
     assert 'test' in tmux_exp.tmux_session.capture_pane()
-    sleep.assert_called_once_with(1337)
 
 
 def test_tmux_experiment_hit_enter_wo_session(tmux_exp):
@@ -165,4 +164,5 @@ def test_tmux_experiment_hit_enter_success(mocker, tmux_exp):
     # capture_pane() provides a list of lines, check if 'test' is in it.
     assert 'test' not in tmux_exp.tmux_session.capture_pane()
     tmux_exp.hit_enter()
+    time.sleep(1)   # wait a bit
     assert 'test' in tmux_exp.tmux_session.capture_pane()
