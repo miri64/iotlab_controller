@@ -27,7 +27,7 @@ def tmux_exp(mocker, base_nodes):  # noqa: F811
     exp.username = 'user'
     yield exp
     if exp.tmux_session:
-        exp.hit_ctrl_d()    # leave pane and kill TMUX session
+        exp.tmux_server.kill_session(exp.tmux_session.window.session.name)
 
 
 # using imported fixtures, for flake8 that is confusing
