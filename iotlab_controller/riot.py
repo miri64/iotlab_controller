@@ -16,7 +16,6 @@ class RIOTFirmware(firmware.BaseFirmware):
         # pylint: disable=too-many-arguments
         # Maybe fixed later
         self.application_path = application_path
-        self.board = board
         self.flashfile = flashfile
         if application_name is None:
             if application_path.endswith("/"):
@@ -31,6 +30,10 @@ class RIOTFirmware(firmware.BaseFirmware):
 
     def __repr__(self):
         return "<{} at {}>".format(type(self).__name__, self.application_name)
+
+    @property
+    def board(self):
+        return self.env['BOARD']
 
     @property
     def path(self):
