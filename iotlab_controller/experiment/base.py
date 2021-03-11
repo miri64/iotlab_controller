@@ -54,7 +54,7 @@ class BaseExperiment:
         if self.is_scheduled():
             return "<{}: {} ({})>".format(type(self).__name__, self.name,
                                           self.exp_id)
-        return "<{}: {} (unscheduled>)".format(type(self).__name__,
+        return "<{}: {} (unscheduled)>".format(type(self).__name__,
                                                self.name)
 
     @classmethod
@@ -75,9 +75,12 @@ class BaseExperiment:
             return cls(name=info["name"], nodes=nodes_, target=target,
                        exp_id=exp_id, api=api, *args, **kwargs)
 
-        exps = iotlabcli.experiment.get_active_experiments(
-                api, running_only=not include_waiting
-            )
+        try:
+            exps = iotlabcli.experiment.get_active_experiments(
+                    api, running_only=not include_waiting
+                )
+        except urllib.error.HTTPError as exc:
+            raise ExperimentError(exc.reason) from exc
         for exp_id in exps.get("Running", []):
             yield _get_exp(exp_id)
         for exp_id in exps.get("Waiting", []):
@@ -121,16 +124,18 @@ class BaseExperiment:
         firmwares = self.firmwares
         profiles = self.profiles
         if firmwares is None:
-            firmwares = [None] * len(self.nodes)
+            firmware_paths = [None] * len(self.nodes)
         elif len(firmwares) == 1:
-            firmwares *= len(self.nodes)
+            firmware_paths = [firmwares[0].path for _ in self.nodes]
+        else:
+            firmware_paths = [f.path for f in firmwares]
         if profiles is None:
             profiles = [None] * len(self.nodes)
         elif len(profiles) == 1:
             profiles *= len(self.nodes)
         return [
-            iotlabcli.experiment.exp_resources([x[0].uri], x[1].path, x[2])
-            for x in zip(self.nodes, firmwares, profiles)
+            iotlabcli.experiment.exp_resources([x[0].uri], x[1], x[2])
+            for x in zip(self.nodes, firmware_paths, profiles)
         ]
 
     def is_scheduled(self):
@@ -149,6 +154,7 @@ class BaseExperiment:
     def stop(self):
         if self.is_scheduled():
             iotlabcli.experiment.stop_experiment(self.api, self.exp_id)
+            self.exp_id = None
 
     def wait(self, states="Running", timeout=float("+inf")):
         if self.is_scheduled():
