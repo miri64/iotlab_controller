@@ -2,6 +2,7 @@
 #
 # Distributed under terms of the MIT license.
 
+import contextlib
 import logging
 import subprocess
 import time
@@ -104,6 +105,16 @@ class TmuxExperiment(base.BaseExperiment):
 
     def stop_serial_aggregator(self):
         self.hit_ctrl_c()
+
+    @contextlib.contextmanager
+    def serial_aggregator(self, site=None, with_a8=False, color=False,
+                          logname=None):
+        try:
+            self.start_serial_aggregator(site=site, with_a8=with_a8,
+                                         color=color, logname=logname)
+            yield self
+        finally:
+            self.stop_serial_aggregator()
 
     def send_keys(self, keys, enter=False, wait_after=0):
         assert self.tmux_session is not None

@@ -131,6 +131,20 @@ def test_tmux_experiment_stop_serial_aggregator(mocker, tmux_exp):
     send_keys.assert_called_once_with("C-c")
 
 
+def test_tmux_experiment_serial_aggregator(mocker, tmux_exp):
+    send_keys = mocker.patch(
+        'iotlab_controller.experiment.tmux.TmuxExperiment.send_keys'
+    )
+    expect = "serial_aggregator -i 12345"
+    with tmux_exp.serial_aggregator() as exp:
+        assert tmux_exp == exp
+        exp.cmd("test")
+    send_keys.assert_any_call(expect, enter=True, wait_after=2)
+    send_keys.assert_any_call("test", enter=True, wait_after=0)
+    # last thing done is closing the serial_aggregator
+    send_keys.assert_called_with("C-c")
+
+
 def test_tmux_experiment_send_keys_wo_session(tmux_exp):
     with pytest.raises(AssertionError):
         tmux_exp.send_keys('echo "test"', wait_after=1337)
