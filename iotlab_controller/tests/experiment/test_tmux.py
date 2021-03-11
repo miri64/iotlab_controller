@@ -60,6 +60,9 @@ def test_tmux_experiment_init(mocker, base_nodes):  # noqa: F811
 )
 def test_tmux_experiment_init_session(tmux_exp, window_name, pane_id,
                                       cwd):
+    # tmux_exp has no session initialized
+    with pytest.raises(libtmux.exc.LibTmuxException):
+        assert not tmux_exp.tmux_server.list_sessions()
     session = tmux_exp.initialize_tmux_session('test-session', window_name,
                                                pane_id, cwd)
     assert session is not None
