@@ -153,6 +153,14 @@ def test_tmux_experiment_send_keys_success(mocker, tmux_exp):
     assert 'test' in tmux_exp.tmux_session.capture_pane()
 
 
+def test_tmux_experiment_hit_ctrl_d(mocker, tmux_exp):
+    send_keys = mocker.patch(
+        'iotlab_controller.experiment.tmux.TmuxExperiment.send_keys'
+    )
+    tmux_exp.hit_ctrl_d()
+    send_keys.assert_called_once_with("C-d")
+
+
 def test_tmux_experiment_hit_enter_wo_session(tmux_exp):
     with pytest.raises(AssertionError):
         tmux_exp.hit_enter()
