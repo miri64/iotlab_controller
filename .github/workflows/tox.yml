@@ -32,4 +32,4 @@ jobs:
     - name: Test with tox
       run: |
         pyenv="py$(echo "${{ matrix.python-version }}" | tr -d '.')"
-        tox -e ${pyenv},${{ matrix.tox-testenv }},flake8,pylint
+        tox -e ${pyenv},test,flake8,pylint
