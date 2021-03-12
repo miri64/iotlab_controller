@@ -31,6 +31,12 @@ class RIOTFirmware(firmware.BaseFirmware):
     def __repr__(self):
         return "<{} at {}>".format(type(self).__name__, self.application_name)
 
+    def __eq__(self, other):
+        return self.application_path == other.application_path and \
+               self.application_name == other.application_name and \
+               self.flashfile == other.flashfile and \
+               self.env == other.env
+
     @property
     def board(self):
         return self.env['BOARD']

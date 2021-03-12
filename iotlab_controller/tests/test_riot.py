@@ -47,6 +47,30 @@ def test_repr():
     assert repr(firmware) == "<RIOTFirmware at test>"
 
 
+@pytest.mark.parametrize(
+    'kwargs_change',
+    [{'application_path': 'this/is/one/test'},
+     {'board': 'otherboard'},
+     {'flashfile': 'a_flash_file.elf'},
+     {'env': {'FOOBAR': 'test'}}]
+)
+def test_eq(kwargs_change):
+    kwargs = {
+        'application_path': 'this/is/a/test',
+        'board': 'myboard',
+        'flashfile': None,
+        'env': None,
+    }
+    firmware1 = iotlab_controller.riot.RIOTFirmware(**kwargs)
+    firmware2 = iotlab_controller.riot.RIOTFirmware(**kwargs)
+    assert firmware1 == firmware2
+    assert all(k in kwargs for k in kwargs_change)
+    assert all(v != kwargs[k] for k, v in kwargs_change.items())
+    kwargs.update(kwargs_change)
+    firmware3 = iotlab_controller.riot.RIOTFirmware(**kwargs)
+    assert firmware1 != firmware3
+
+
 @pytest.mark.parametrize('flashfile', [None, 'firmware/has/a/path.elf'])
 def test_path(flashfile):
     firmware = iotlab_controller.riot.RIOTFirmware(

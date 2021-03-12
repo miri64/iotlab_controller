@@ -10,6 +10,10 @@ class FirmwareBuildError(Exception):
 
 
 class BaseFirmware(abc.ABC):
+    @abc.abstractmethod
+    def __eq__(self, other):
+        raise NotImplementedError()
+
     @property
     @abc.abstractmethod
     def path(self):
