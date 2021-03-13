@@ -4,6 +4,7 @@
 
 import contextlib
 import logging
+import re
 import subprocess
 import time
 
@@ -112,9 +113,24 @@ class TmuxExperiment(base.BaseExperiment):
         try:
             self.start_serial_aggregator(site=site, with_a8=with_a8,
                                          color=color, logname=logname)
+            comp = re.compile("Aggregator started$")
+            aggr_started = False
+            for _ in range(5):
+                for line in self.tmux_session.capture_pane():
+                    if comp.search(line):
+                        aggr_started = True
+                        break
+                if aggr_started:
+                    break
+                time.sleep(2)
+            if not aggr_started:
+                raise base.ExperimentError('Unable to start serial_aggregator')
             yield self
         finally:
             self.stop_serial_aggregator()
+            self.stop_serial_aggregator()
+            self.stop_serial_aggregator()
+            time.sleep(.1)
 
     def send_keys(self, keys, enter=False, wait_after=0):
         assert self.tmux_session is not None

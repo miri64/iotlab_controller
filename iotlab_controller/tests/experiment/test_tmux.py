@@ -127,9 +127,14 @@ def test_tmux_experiment_stop_serial_aggregator(mocker, tmux_exp):
     send_keys.assert_called_once_with("C-c")
 
 
-def test_tmux_experiment_serial_aggregator(mocker, tmux_exp):
+def test_tmux_experiment_serial_aggregator_success(mocker, tmux_exp):
     send_keys = mocker.patch(
         'iotlab_controller.experiment.tmux.TmuxExperiment.send_keys'
+    )
+    tmux_exp.tmux_server.kill_session = mocker.Mock()
+    tmux_exp.tmux_session = mocker.MagicMock()
+    tmux_exp.tmux_session.capture_pane = mocker.Mock(
+        return_value=['foobar', 'Aggregator started']
     )
     expect = "serial_aggregator -i 12345"
     with tmux_exp.serial_aggregator() as exp:
@@ -137,6 +142,25 @@ def test_tmux_experiment_serial_aggregator(mocker, tmux_exp):
         exp.cmd("test")
     send_keys.assert_any_call(expect, enter=True, wait_after=2)
     send_keys.assert_any_call("test", enter=True, wait_after=0)
+    # last thing done is closing the serial_aggregator
+    send_keys.assert_called_with("C-c")
+
+
+def test_tmux_experiment_serial_aggregator_timeout(mocker, tmux_exp):
+    send_keys = mocker.patch(
+        'iotlab_controller.experiment.tmux.TmuxExperiment.send_keys'
+    )
+    mocker.patch('time.sleep')
+    tmux_exp.tmux_server.kill_session = mocker.Mock()
+    tmux_exp.tmux_session = mocker.MagicMock()
+    tmux_exp.tmux_session.capture_pane = mocker.Mock(
+        return_value=['foobar']
+    )
+    expect = "serial_aggregator -i 12345"
+    with pytest.raises(iotlab_controller.experiment.base.ExperimentError):
+        with tmux_exp.serial_aggregator():
+            pass
+    send_keys.assert_any_call(expect, enter=True, wait_after=2)
     # last thing done is closing the serial_aggregator
     send_keys.assert_called_with("C-c")
 
