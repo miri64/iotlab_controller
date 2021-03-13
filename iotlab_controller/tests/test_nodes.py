@@ -459,6 +459,19 @@ def test_sink_networked_nodes_flash_wo_sink(mocker, sink_networked_nodes):
     )
 
 
+def test_sink_networked_nodes_flash_same_sink_firmware(mocker,
+                                                       sink_networked_nodes):
+    node_command = mocker.patch('iotlabcli.node.node_command')
+    firmware = mocker.Mock()
+    res = sink_networked_nodes.flash(12345, firmware, firmware)
+    assert res == node_command.return_value
+    node_command.assert_called_once_with(
+        sink_networked_nodes.api, 'flash', 12345,
+        ['m3-1.grenoble.iot-lab.info', 'm3-2.grenoble.iot-lab.info'],
+        firmware.path
+    )
+
+
 @pytest.mark.parametrize(
     'node_command_results, exp_res', [
         (

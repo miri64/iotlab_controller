@@ -553,7 +553,7 @@ class SinkNetworkedNodes(NetworkedNodes):
     def flash(self, exp_id, firmware, sink_firmware=None):
         # pylint: disable=arguments-differ
         # Adds additional, but optional arguments
-        if sink_firmware is None:
+        if sink_firmware is None or sink_firmware == firmware:
             return super().flash(exp_id, firmware)
         res1 = iotlabcli.node.node_command(
                 self.api, "flash", exp_id, list(self.non_sink_node_uris),
