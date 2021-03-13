@@ -63,9 +63,12 @@ class RIOTFirmware(firmware.BaseFirmware):
     def build(self, build_env=None, threads=1):
         # pylint: disable=arguments-differ
         # Adds additional, but optional arguments
-        self._run(build_env, [
-            "make", "-j", str(threads), "-C", self.application_path, "all"
-        ])
+        cmd = ['make', "-C", self.application_path, "all"]
+        if not threads:
+            cmd.append('-j')
+        else:
+            cmd.extend(['-j', str(threads)])
+        self._run(build_env, cmd)
 
     def clean(self, build_env=None):
         # pylint: disable=arguments-differ

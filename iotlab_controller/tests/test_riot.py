@@ -98,7 +98,7 @@ def test_build_success(mocker, build_env):
         exp_env.update(build_env)
     firmware.build(build_env=build_env)
     run.assert_called_once_with(
-        ['make', '-j', '1', '-C', firmware.application_path, 'all'],
+        ['make', '-C', firmware.application_path, 'all', '-j', '1'],
         env=exp_env,
         check=True
     )
@@ -118,9 +118,9 @@ def test_build_error(mocker, build_env):
     if build_env:
         exp_env.update(build_env)
     with pytest.raises(iotlab_controller.firmware.FirmwareBuildError):
-        firmware.build(build_env=build_env)
+        firmware.build(build_env=build_env, threads='')
     run.assert_called_once_with(
-        ['make', '-j', '1', '-C', firmware.application_path, 'all'],
+        ['make', '-C', firmware.application_path, 'all', '-j'],
         env=exp_env,
         check=True
     )
