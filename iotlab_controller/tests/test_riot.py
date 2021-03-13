@@ -69,6 +69,7 @@ def test_eq(kwargs_change):
     kwargs.update(kwargs_change)
     firmware3 = iotlab_controller.riot.RIOTFirmware(**kwargs)
     assert firmware1 != firmware3
+    assert firmware1 != "foobar"
 
 
 @pytest.mark.parametrize('flashfile', [None, 'firmware/has/a/path.elf'])
