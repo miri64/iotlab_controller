@@ -1,1 +1,2 @@
 iotlabcli>=2.5
+PyYAML>=5.4
