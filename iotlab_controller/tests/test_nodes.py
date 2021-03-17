@@ -103,6 +103,17 @@ def networked_nodes_base():
             'y': '3.14',
             'z': '12.24',
         },
+        {
+            'archi': 'foobar',
+            'mobile': False,
+            'mobility_type': ' ',
+            'network_address': 'm3-3.grenoble.iot-lab.info',
+            'site': 'grenoble',
+            'uid': ' ',
+            'x': '2.34',
+            'y': '3.14',
+            'z': '67.89',
+        },
     ]
 
 
