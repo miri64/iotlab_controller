@@ -46,9 +46,9 @@ class TmuxExperiment(base.BaseExperiment):
                                                               window_name,
                                                               cwd)
             if self.tmux_session is None:
-                self.tmux_session = self._create_tmux_session(session_name,
-                                                              window_name,
-                                                              cwd)
+                self.tmux_session = self._create_tmux_session(
+                    session_name, window_name, cwd
+                )   # pragma: no cover
 
     def initialize_tmux_session(self, session_name, window_name=None,
                                 pane_id=None, cwd=None):

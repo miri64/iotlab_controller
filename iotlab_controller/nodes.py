@@ -10,9 +10,9 @@ import math
 import iotlabcli.node
 try:
     import networkx
-except ImportError:
+except ImportError:                     # pragma: no cover
     logging.warning("Can't import networkx, you won't be able to use "
-                    "NetworkedNodes")
+                    "NetworkedNodes")   # pragma: no cover
 
 from iotlab_controller import common
 
