@@ -412,6 +412,23 @@ def test_networked_nodes_leafs(networked_nodes):
     assert networked_nodes.leafs == ['m3-1', 'm3-2']
 
 
+def test_networked_nodes_all_nodes(mocker, networked_nodes_base):
+    api = mocker.Mock()
+    api.get_nodes = mocker.Mock(return_value={'items': networked_nodes_base})
+    res = iotlab_controller.nodes.NetworkedNodes.all_nodes(
+        archi='foobar',
+        state='Running',
+        site='grenoble',
+        api=api,
+    )
+    assert isinstance(res, iotlab_controller.nodes.NetworkedNodes)
+    api.get_nodes.assert_called_with(archi='foobar', state='Running',
+                                     site='grenoble')
+    assert len(res.nodes) == len(networked_nodes_base)
+    for node in networked_nodes_base:
+        assert node['network_address'] in res
+
+
 def test_networked_nodes_add_node(mocker, networked_nodes):
     add = mocker.patch(
         'iotlab_controller.nodes.NetworkedNodes.add',

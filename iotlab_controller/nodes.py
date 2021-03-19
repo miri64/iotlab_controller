@@ -180,8 +180,8 @@ class BaseNodes:
         """
         nodes = self.nodes.copy()
         nodes.update(other.nodes)
-        return self._from_existing_nodes(nodes, self.state, self.api,
-                                         self.node_class)
+        return self._from_existing_nodes(nodes, state=self.state, api=self.api,
+                                         node_class=self.node_class)
 
     @classmethod
     def all_nodes(cls, *args, site=None, state=None, archi=None, api=None,
@@ -193,8 +193,8 @@ class BaseNodes:
         # pylint: disable=protected-access
         # Access to protected method of class within class method
         res.nodes = {
-            args["network_address"]: node_class.from_dict(args, api=res.api)
-            for args in res._fetch_all_nodes(site=site, archi=archi)
+            n["network_address"]: node_class.from_dict(n, api=res.api)
+            for n in res._fetch_all_nodes(site=site, archi=archi)
         }
         return res
 
@@ -268,8 +268,9 @@ class BaseNodes:
         m3-2.lille.iot-lab.info
         """
         nodes_ = {k: v for k, v in self.nodes.copy().items() if k in nodes}
-        return self._from_existing_nodes(nodes_, self.state, self.api,
-                                         self)
+        return self._from_existing_nodes(nodes_, state=self.state,
+                                         api=self.api,
+                                         node_class=self.node_class)
 
     def to_json(self):
         return json.dumps({n: self.nodes[n].to_dict()
@@ -337,7 +338,7 @@ class NetworkedNodes(BaseNodes):
                     edge["weight"] = info1.distance(info2)
         else:
             self.network = networkx.Graph()
-            super().__init__(state=state, node_class=node_class)
+            super().__init__(state=state, api=api, node_class=node_class)
 
     def __getitem__(self, node):
         if not self._is_uri(node):
@@ -409,6 +410,19 @@ class NetworkedNodes(BaseNodes):
     def leafs(self):
         return [n for n in self.network.nodes
                 if len(list(self.network.neighbors(n))) == 1]
+
+    @classmethod
+    def all_nodes(cls, *args, site=None, state=None, archi=None, api=None,
+                  node_class=BaseNode, **kwargs):
+        res = cls(site=site, state=state, api=api, node_class=node_class,
+                  *args, **kwargs)
+        # pylint: disable=protected-access
+        # Access to protected method of class within class method
+        res.nodes = {
+            n["network_address"]: node_class.from_dict(n, api=res.api)
+            for n in res._fetch_all_nodes(site=site, archi=archi)
+        }
+        return res
 
     def add(self, node):
         """
