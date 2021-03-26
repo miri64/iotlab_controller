@@ -4,8 +4,10 @@
 # pylint: disable=redefined-outer-name
 # pylint gets confused by fixture base_node
 
+import libtmux
 import libtmux.exc
 import pytest
+import subprocess
 import time
 
 import iotlab_controller.experiment.tmux
@@ -28,7 +30,16 @@ def tmux_exp(mocker, base_nodes):  # noqa: F811
     exp.username = 'user'
     yield exp
     if exp.tmux_session:
-        exp.tmux_server.kill_session(exp.tmux_session.window.session.name)
+        if isinstance(exp.tmux_session, libtmux.Pane):
+            exp.tmux_server.kill_session(exp.tmux_session.window.session.name)
+        elif isinstance(exp.tmux_session, libtmux.Window):
+            exp.tmux_server.kill_session(       # pragma: no cover
+                exp.tmux_session.session.name
+            )
+        elif isinstance(exp.tmux_session, libtmux.Session):
+            exp.tmux_server.kill_session(       # pragma: no cover
+                exp.tmux_session.name
+            )
 
 
 # using imported fixtures, for flake8 that is confusing
@@ -74,8 +85,50 @@ def test_tmux_experiment_init_session(tmux_exp, window_name, pane_id,
     assert len(tmux_sessions) == 1
     assert session.window.session == tmux_sessions[0]
     assert not window_name or session.window.name == window_name
-    assert not pane_id or session.id == pane_id
     if cwd:
+        tmux_exp.cmd('pwd', wait_after=1)
+        # capture_pane() provides a list of lines, check if cwd is in it.
+        assert cwd in tmux_exp.tmux_session.capture_pane()
+    new_session = tmux_exp.initialize_tmux_session('test-session', window_name,
+                                                   pane_id, cwd)
+    assert session == new_session
+
+
+@pytest.mark.parametrize(
+    'window_name, pane_id, cwd',
+    [
+        (None,          None,   None),
+        ('test-window', None,   None),
+        (None,          '%0',   None),
+        ('test-window', '%0',   None),
+        (None,          None,   '/tmp'),
+        ('test-window', None,   '/tmp'),
+        (None,          '%0',   '/tmp'),
+        ('test-window', '%0',   '/tmp'),
+    ]
+)
+def test_tmux_experiment_init_session_existing_session(tmux_exp,
+                                                       window_name,
+                                                       pane_id, cwd):
+    # tmux_exp has no session initialized
+    with pytest.raises(libtmux.exc.LibTmuxException):
+        assert not tmux_exp.tmux_server.list_sessions()
+    cmd = ['tmux', 'new-session', '-d', '-s', 'test-session', '-n',
+           'other-window']
+    subprocess.run(cmd, check=True)
+    session = tmux_exp.initialize_tmux_session('test-session', window_name,
+                                               pane_id, cwd)
+    assert session is not None
+    assert session == tmux_exp.tmux_session
+    # there is now a session named test-session
+    tmux_sessions = [s for s in tmux_exp.tmux_server.list_sessions()
+                     if s.name == 'test-session']
+    assert len(tmux_sessions) == 1
+    assert session.window.session == tmux_sessions[0]
+    assert not window_name or session.window.name == window_name
+    # workdir is only changed when new window is created, so only check if
+    # window_name is provided
+    if cwd and window_name:
         tmux_exp.cmd('pwd', wait_after=1)
         # capture_pane() provides a list of lines, check if cwd is in it.
         assert cwd in tmux_exp.tmux_session.capture_pane()

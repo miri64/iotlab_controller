@@ -69,6 +69,12 @@ class TmuxExperiment(base.BaseExperiment):
             # find pane
             if window_name is not None:
                 self.tmux_session = self.tmux_session.find_where(search_params)
+                if self.tmux_session.name != window_name:
+                    self.tmux_session = self.tmux_session.session.new_window(
+                        window_name=window_name,
+                        start_directory=cwd,
+                        attach=False,
+                    )
             else:
                 self.tmux_session = self.tmux_session.select_window(0)
             if pane_id is not None:
