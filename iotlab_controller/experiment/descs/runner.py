@@ -403,13 +403,13 @@ class ExperimentDispatcher:
                 self.dump_experiment_descriptions()
                 break
             for runner in self.runners:
-                logger.info('Waiting for experiment %d to start',
-                            runner.exp_id)
+                exp_id = runner.exp_id
+                logger.info('Waiting for experiment %d to start', exp_id)
                 try:
                     runner.experiment.wait()
                 except (ExperimentError, RuntimeError) as exc:
                     logger.error('Could not wait for experiment: %s', exc)
                 else:
                     runner.experiment.run()
-                del self.descs[runner.exp_id]
+                del self.descs[exp_id]
                 self.dump_experiment_descriptions()
