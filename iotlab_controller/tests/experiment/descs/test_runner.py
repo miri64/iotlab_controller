@@ -206,7 +206,7 @@ def test_experiment_runner_init_faulty_descs(mocker, api_mock, exp_id, descs):
                 'globals': {'nodes': {
                     'network': {
                         'site': 'grenoble',
-                        'edgelist_file': 'network.edgelist.gz',
+                        'edgelist_file': 'network.edgelist',
                     },
                 }},
                 123: {},
@@ -273,7 +273,7 @@ def test_experiment_runner_init_success(mocker, api_mock, exp_id, exp_nodes,
     if isinstance(descs[exp_id]['nodes'], dict) and \
        'edgelist_file' in descs[exp_id]['nodes']['network']:
         open_mock = mocker.mock_open(read_data='m3-1 m3-2 2.4\n')
-        mocker.patch('iotlab_controller.experiment.descs.runner.open',
+        mocker.patch('builtins.open',
                      open_mock)
         check_edgefile = True
     else:
@@ -284,7 +284,8 @@ def test_experiment_runner_init_success(mocker, api_mock, exp_id, exp_nodes,
     assert runner.exp_id == exp_id
     if check_edgefile:
         open_mock.assert_called_once_with(
-            descs[exp_id]['nodes']['network']['edgelist_file']
+            descs[exp_id]['nodes']['network']['edgelist_file'],
+            mode='rb'
         )
     # with python 3.6 mocking the edgelist file does not work properly
     if not check_edgefile or sys.version_info >= (3, 7):    # pragma: no cover
