@@ -115,8 +115,7 @@ class ExperimentRunner:
                 res.add_edge(edge[0], edge[1])
             return res
         if 'edgelist_file' in network:
-            with open(network['edgelist_file']) as edgelist:
-                return cls(edgelist_file=edgelist, **kwargs)
+            return cls(edgelist_file=network['edgelist_file'], **kwargs)
         raise DescriptionError('Missing edgelist in {nodes_desc}')
 
     def _init_nodes(self):
