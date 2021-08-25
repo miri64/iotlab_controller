@@ -7,7 +7,7 @@
 from setuptools import setup, find_packages
 
 name = "iotlab_controller"
-version = "0.7.3b"
+version = "0.7.4b"
 description = "Python-based controller for IoT-LAB experiments"
 author = "Martine Lenders"
 author_email = "m.lenders@fu-berlin.de"
