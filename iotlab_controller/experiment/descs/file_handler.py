@@ -218,11 +218,11 @@ class DescriptionFileHandler:
         return content
 
     def load(self):
-        with open(self.filename) as inp:
+        with open(self.filename, encoding='utf-8') as inp:
             res = self._serializer.load(inp)
             res = self.load_content(res)
         return res
 
     def dump(self, descs):
-        with open(self.filename, 'w') as outp:
+        with open(self.filename, 'w', encoding='utf-8') as outp:
             return self._serializer.dump(outp, descs)

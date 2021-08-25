@@ -154,7 +154,7 @@ def test_description_file_handler_load_dump_json(mocker):
                  open_mock)
     loader = file_handler.DescriptionFileHandler(filename='foobar.json')
     res = loader.load()
-    open_mock.assert_called_once_with('foobar.json')
+    open_mock.assert_called_once_with('foobar.json', encoding='utf-8')
     assert res['globals']['name'] == 'sfr-cc'
     assert len(res[253655]['runs']) == 1
     assert res[253655]['runs'][0]['args']['data_len'] == 104
@@ -165,11 +165,11 @@ def test_description_file_handler_load_dump_json(mocker):
     # check if second call creates same result
     open_mock.reset_mock()
     new_res = loader.load()
-    open_mock.assert_called_once_with('foobar.json')
+    open_mock.assert_called_once_with('foobar.json', encoding='utf-8')
     assert res == new_res
     open_mock.reset_mock()
     loader.dump(res)
-    open_mock.assert_called_once_with('foobar.json', 'w')
+    open_mock.assert_called_once_with('foobar.json', 'w', encoding='utf-8')
     # Accessing mock call args was only introduced in python 3.8:
     # https://bugs.python.org/issue21269
     if sys.version_info < (3, 8):
@@ -181,7 +181,7 @@ def test_description_file_handler_load_dump_json(mocker):
     # check if second call creates same result
     open_mock.reset_mock()
     loader.dump(res)
-    open_mock.assert_called_once_with('foobar.json', 'w')
+    open_mock.assert_called_once_with('foobar.json', 'w', encoding='utf-8')
     out = ''
     for write in open_mock().write.mock_calls:
         out += write.args[0]
@@ -203,7 +203,7 @@ def test_description_file_handler_load_no_globals_no_runs(mocker):
                  open_mock)
     loader = file_handler.DescriptionFileHandler(filename='foobar.yaml')
     res = loader.load()
-    open_mock.assert_called_once_with('foobar.yaml')
+    open_mock.assert_called_once_with('foobar.yaml', encoding='utf-8')
     assert res[253655]['name'] == 'sfr-cc'
     assert len(res[253655]['runs']) == 0
 
@@ -237,7 +237,7 @@ globals:
                  open_mock)
     loader = file_handler.DescriptionFileHandler(filename='foobar.yaml')
     res = loader.load()
-    open_mock.assert_called_once_with('foobar.yaml')
+    open_mock.assert_called_once_with('foobar.yaml', encoding='utf-8')
     assert res['globals']['name'] == 'sfr-cc'
     assert res['globals'].env['MODE'] == 'hwr'
     assert 'CONGURE_IMPL' not in res['globals'].env
@@ -255,7 +255,7 @@ globals:
     assert res[253655]['runs'][0]['name'] == 'foobar'
     open_mock.reset_mock()
     loader.dump(res)
-    open_mock.assert_called_once_with('foobar.yaml', 'w')
+    open_mock.assert_called_once_with('foobar.yaml', 'w', encoding='utf-8')
     # Accessing mock call args was only introduced in python 3.8:
     # https://bugs.python.org/issue21269
     if sys.version_info < (3, 8):
@@ -268,7 +268,7 @@ globals:
     # check if second call creates same result
     open_mock.reset_mock()
     loader.dump(res)
-    open_mock.assert_called_once_with('foobar.yaml', 'w')
+    open_mock.assert_called_once_with('foobar.yaml', 'w', encoding='utf-8')
     out = ''
     for write in open_mock().write.mock_calls:
         out += write.args[0]
@@ -296,7 +296,7 @@ unscheduled:
                  open_mock)
     loader = file_handler.DescriptionFileHandler(filename='foobar.yaml')
     res = loader.load()
-    open_mock.assert_called_once_with('foobar.yaml')
+    open_mock.assert_called_once_with('foobar.yaml', encoding='utf-8')
     assert res['globals']['name'] == 'sfr-cc'
     assert res['globals'].env['MODE'] == 'hwr'
     assert 'CONGURE_IMPL' not in res['globals'].env

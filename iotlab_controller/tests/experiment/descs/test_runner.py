@@ -978,7 +978,7 @@ def test_experiment_dispatcher_run_exps(mocker, exp_dispatcher, descs):
     # 1 call for each removal of runs of exp 123455
     # 1 call for each removal of an experiment
     assert open_mock.call_args_list == 4 * [
-        mocker.call(exp_dispatcher.filename, 'w')
+        mocker.call(exp_dispatcher.filename, 'w', encoding='utf-8')
     ]
 
 
