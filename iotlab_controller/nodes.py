@@ -57,7 +57,7 @@ class BaseNode:
         return hash(self.uri)
 
     def __str__(self):
-        return "<{}: {}>".format(type(self).__name__, self.uri)
+        return f"<{type(self).__name__}: {self.uri}>"
 
     @property
     def state(self):
@@ -70,8 +70,8 @@ class BaseNode:
 
     def distance(self, other):
         if (self.x is None) or (other.x is None) or (self.site != other.site):
-            raise NodeError("Unable to determine distance of nodes {} and {}"
-                            .format(self, other))
+            raise NodeError("Unable to determine distance of nodes "
+                            f"{self} and {other}")
         return math.sqrt((self.x - other.x) ** 2 +
                          (self.y - other.y) ** 2 +
                          (self.z - other.z) ** 2)
@@ -231,7 +231,7 @@ class BaseNodes:
                 res = self.node_class.from_dict(args, api=self.api)
                 self.nodes[node] = res
                 return
-        raise NodeError("Can't load node information on {}".format(node))
+        raise NodeError(f"Can't load node information on {node}")
 
     def flash(self, exp_id, firmware):
         return iotlabcli.node.node_command(self.api, "flash", exp_id,
@@ -401,10 +401,10 @@ class NetworkedNodes(BaseNodes):
         return hashlib.sha512(str(edges).encode()).hexdigest()[:8]
 
     def __str__(self):
-        return "{}".format(self._network_digest())
+        return f"{self._network_digest()}"
 
     def _is_uri(self, node):
-        return ".{}.".format(self.site) in node
+        return f".{self.site}." in node
 
     @property
     def leafs(self):
@@ -528,7 +528,7 @@ class SinkNetworkedNodes(NetworkedNodes):
         self.add(sink)
 
     def __str__(self):
-        return "{}x{}".format(self.sink, self._network_digest())
+        return f"{self.sink}x{self._network_digest()}"
 
     def __iter__(self):
         """

@@ -29,7 +29,7 @@ class RIOTFirmware(firmware.BaseFirmware):
             self.env.update(env)
 
     def __repr__(self):
-        return "<{} at {}>".format(type(self).__name__, self.application_name)
+        return f"<{type(self).__name__} at {self.application_name}>"
 
     def __eq__(self, other):
         return isinstance(other, RIOTFirmware) and \
@@ -47,8 +47,8 @@ class RIOTFirmware(firmware.BaseFirmware):
         if self.flashfile is None:
             return os.path.join(self.application_path,
                                 "bin", self.board,
-                                "{}.{}".format(self.application_name,
-                                               RIOTFirmware.FILE_EXTENSION))
+                                f"{self.application_name}."
+                                f"{RIOTFirmware.FILE_EXTENSION}")
         return self.flashfile
 
     def _run(self, build_env, cmd):

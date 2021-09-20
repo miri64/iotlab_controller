@@ -89,7 +89,7 @@ class TmuxExperiment(base.BaseExperiment):
         time.sleep(.1)
         self.send_keys("reset", enter=True)
         if site is not None:
-            ssh = "ssh {}@{}.{} ".format(self.username, site, IOTLAB_DOMAIN)
+            ssh = f"ssh {self.username}@{site}.{IOTLAB_DOMAIN} "
         else:
             logging.warning("Assuming to run on SSH frontend")
             logging.warning("\tadd `site` parameter to "
@@ -103,11 +103,9 @@ class TmuxExperiment(base.BaseExperiment):
             color = " --color"
         else:
             color = ""
-        cmd = "{}serial_aggregator -i {}{}{}".format(
-                ssh, self.exp_id, with_a8, color
-            )
+        cmd = f"{ssh}serial_aggregator -i {self.exp_id}{with_a8}{color}"
         if logname is not None:
-            cmd += "| tee -a {}".format(logname)
+            cmd += f"| tee -a {logname}"
         self.send_keys(cmd, enter=True, wait_after=2)
 
     def stop_serial_aggregator(self):

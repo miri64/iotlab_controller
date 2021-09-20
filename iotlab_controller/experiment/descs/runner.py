@@ -161,8 +161,9 @@ class ExperimentRunner:
         if not sink_firmware and not firmwares:
             return
         if sink_firmware and not firmwares:
-            raise DescriptionError('sink_firmware but no firmwares for {}'
-                                   .format(self.desc))
+            raise DescriptionError(
+                f'sink_firmware but no firmwares for {self.desc}'
+            )
         if sink_firmware:
             self._append_firmware(sink_firmware)
         for firmware in firmwares:

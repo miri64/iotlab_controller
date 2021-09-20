@@ -52,10 +52,8 @@ class BaseExperiment:
 
     def __str__(self):
         if self.is_scheduled():
-            return "<{}: {} ({})>".format(type(self).__name__, self.name,
-                                          self.exp_id)
-        return "<{}: {} (unscheduled)>".format(type(self).__name__,
-                                               self.name)
+            return f"<{type(self).__name__}: {self.name} ({self.exp_id})>"
+        return f"<{type(self).__name__}: {self.name} (unscheduled)>"
 
     @classmethod
     def iter_experiments(cls, *args, include_waiting=False, target=None,
@@ -93,7 +91,7 @@ class BaseExperiment:
             raise ExperimentError(exc.reason) from exc
         if exp["state"] in ["Error", "Terminated", "Stopped"]:
             raise ExperimentError(
-                "{} terminated or had an error".format(self)
+                f"{self} terminated or had an error"
             )
         not_in_exp = []
         for node in self.nodes:
@@ -101,8 +99,8 @@ class BaseExperiment:
                 not_in_exp.append(node.uri)
         if not_in_exp:
             error_msg = "The following nodes are not part of " \
-                        "experiment {}:\n".format(self.exp_id)
-            error_msg += "\n".join(["* {}".format(node)
+                        f"experiment {self.exp_id}:\n"
+            error_msg += "\n".join([f"* {node}"
                                     for node in self.nodes])
             raise ExperimentError(error_msg)
 
@@ -143,7 +141,7 @@ class BaseExperiment:
 
     def schedule(self, duration, start_time=None):
         if self.is_scheduled():
-            raise ExperimentError("{} already scheduled".format(self))
+            raise ExperimentError(f"{self} already scheduled")
         if start_time is not None:
             start_time = int(start_time.timestamp())
         resources = self._get_resources()
@@ -162,11 +160,11 @@ class BaseExperiment:
                                                  states=states,
                                                  timeout=timeout)
         else:
-            raise ExperimentError("{} is not scheduled".format(self))
+            raise ExperimentError(f"{self} is not scheduled")
 
     def run(self):
         if self.is_scheduled():
             if self.target:
                 self.target(self, *self.target_args, **self.target_kwargs)
         else:
-            raise ExperimentError("{} is not scheduled".format(self))
+            raise ExperimentError(f"{self} is not scheduled")

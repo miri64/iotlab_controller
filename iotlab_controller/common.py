@@ -17,4 +17,4 @@ def get_uri(site, node):
     >>> get_uri("grenoble", "m3-1")
     'm3-1.grenoble.iot-lab.info'
     """
-    return "{}.{}.{}".format(node, site, constants.IOTLAB_DOMAIN)
+    return f"{node}.{site}.{constants.IOTLAB_DOMAIN}"
