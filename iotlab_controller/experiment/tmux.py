@@ -83,8 +83,9 @@ class TmuxExperiment(base.BaseExperiment):
                 self.tmux_session = self.tmux_session.select_pane(0)
         return self.tmux_session
 
+    # pylint: disable=too-many-arguments
     def start_serial_aggregator(self, site=None, with_a8=False, color=False,
-                                logname=None):
+                                logname=None, nodes=None):
         self.hit_ctrl_c()
         time.sleep(.1)
         self.send_keys("reset", enter=True)
@@ -103,7 +104,11 @@ class TmuxExperiment(base.BaseExperiment):
             color = " --color"
         else:
             color = ""
-        cmd = f"{ssh}serial_aggregator -i {self.exp_id}{with_a8}{color}"
+        if nodes:
+            nodes = f" -l {nodes.arglist}"
+        else:
+            nodes = ""
+        cmd = f"{ssh}serial_aggregator -i {self.exp_id}{nodes}{with_a8}{color}"
         if logname is not None:
             cmd += f"| tee -a {logname}"
         self.send_keys(cmd, enter=True, wait_after=2)
@@ -112,11 +117,13 @@ class TmuxExperiment(base.BaseExperiment):
         self.hit_ctrl_c()
 
     @contextlib.contextmanager
+    # pylint: disable=too-many-arguments
     def serial_aggregator(self, site=None, with_a8=False, color=False,
-                          logname=None):
+                          logname=None, nodes=None):
         try:
             self.start_serial_aggregator(site=site, with_a8=with_a8,
-                                         color=color, logname=logname)
+                                         color=color, logname=logname,
+                                         nodes=nodes)
             comp = re.compile("Aggregator started$")
             aggr_started = False
             for _ in range(5):

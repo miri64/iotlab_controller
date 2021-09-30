@@ -215,6 +215,37 @@ class BaseNodes:
             kwargs["site"] = site
         return self.api.get_nodes(**kwargs)["items"]
 
+    @property
+    def arglist(self):
+        """
+        >>> nodes = BaseNodes()
+        >>> nodes.add("m3-1.paris.iot-lab.info")
+        >>> nodes.add("m3-3.paris.iot-lab.info")
+        >>> nodes.arglist
+        'paris,m3,1+3'
+        """
+        site = None
+        arch = None
+        arch_name = None
+        node_nums = []
+        for node in self:
+            if site is None:
+                site = node.site
+            if arch is None:
+                arch = node.arch
+            if node.site != site:
+                raise AttributeError(
+                    "Can not produce arglist, nodes have different sites"
+                )   # pragma: no cover
+            if node.arch != arch:
+                raise AttributeError(
+                    "Can not produce arglist, nodes have different archs"
+                )   # pragma: no cover
+            if arch_name is None:
+                arch_name = node.uri.split('.')[0].split('-')[0]
+            node_nums.append(node.uri.split('.')[0].split('-')[1])
+        return f"{site},{arch_name},{'+'.join(node_nums)}"
+
     def add(self, node):
         """
         >>> nodes = BaseNodes()

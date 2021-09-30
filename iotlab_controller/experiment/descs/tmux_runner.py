@@ -107,8 +107,10 @@ class TmuxExperimentDispatcher(ExperimentDispatcher):
         color = bool(run.get('serial_aggregator_color'))
         logname = ctx['logname']
         runner.experiment.cmd(f'echo "Starting run {run_name}" >> {logname}')
+        nodes = ctx.get('nodes')
         with runner.experiment.serial_aggregator(site=site, with_a8=with_a8,
-                                                 color=color, logname=logname):
+                                                 color=color, logname=logname,
+                                                 nodes=nodes):
             if runner.get_tmux_cmds(run):
                 for cmd in runner.get_tmux_cmds(run):
                     runner.experiment.cmd(cmd.format(

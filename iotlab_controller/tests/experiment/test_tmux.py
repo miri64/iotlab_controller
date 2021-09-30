@@ -138,31 +138,39 @@ def test_tmux_experiment_init_session_existing_session(tmux_exp,
 
 
 @pytest.mark.parametrize(
-    'site, with_a8, color, logname',
+    'site, with_a8, color, logname, nodes',
     [
-        (None,      None,   None,   None),
-        (None,      False,  False,  None),
-        ('foobar',  False,  False,  None),
-        (None,      True,   False,  None),
-        ('foobar',  True,   False,  None),
-        (None,      False,  True,   None),
-        ('foobar',  False,  True,   None),
-        (None,      True,   True,   None),
-        ('foobar',  True,   True,   None),
-        (None,      False,  False,  'logfile.log'),
-        ('foobar',  False,  False,  'logfile.log'),
+        (None,      None,   None,   None, None),
+        (None,      False,  False,  None, None),
+        ('foobar',  False,  False,  None, None),
+        (None,      True,   False,  None, None),
+        ('foobar',  True,   False,  None, None),
+        (None,      False,  True,   None, None),
+        ('foobar',  False,  True,   None, None),
+        (None,      True,   True,   None, None),
+        ('foobar',  True,   True,   None, None),
+        (None,      False,  False,  'logfile.log', None),
+        ('foobar',  False,  False,  'logfile.log', None),
+        (None,      None,   None,   None, "base_nodes"),
     ]
 )
-def test_tmux_experiment_start_serial_aggregator(mocker, tmux_exp, site,
-                                                 with_a8, color, logname):
+def test_tmux_experiment_start_serial_aggregator(
+    mocker, tmux_exp, site, with_a8, color, logname, nodes,
+    base_nodes,     # noqa: F811
+):
+    if nodes == "base_nodes":
+        nodes = base_nodes
     send_keys = mocker.patch(
         'iotlab_controller.experiment.tmux.TmuxExperiment.send_keys'
     )
-    tmux_exp.start_serial_aggregator(site, with_a8, color, logname)
+    tmux_exp.start_serial_aggregator(site, with_a8, color, logname,
+                                     nodes=nodes)
     expect = ""
     if site:
         expect += "ssh user@foobar.iot-lab.info "
     expect += "serial_aggregator -i 12345"
+    if nodes:
+        expect += f" -l {nodes.arglist}"
     if with_a8:
         expect += " --with-a8"
     if color:
