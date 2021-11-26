@@ -26,7 +26,7 @@ class BaseNode:
     # Maybe fix later
     def __init__(self, api, archi, mobile, mobility_type, network_address,
                  site, uid, x, y, z, *args, **kwargs):
-        # pylint: disable=too-many-arguments, unused-argument
+        # pylint: disable=too-many-arguments, unused-argument, invalid-name
         # Maybe fix later
         self.arch = archi
         self.mobile = mobile != 0
