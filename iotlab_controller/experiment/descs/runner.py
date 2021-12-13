@@ -346,20 +346,27 @@ class ExperimentDispatcher:
     def has_experiments_to_run(self):
         return self.num_experiments_to_run() > 0
 
-    def load_experiment_descriptions(self, schedule=True, run=True):
+    def load_experiment_descriptions(self, schedule=True, run=True,
+                                     limit_unscheduled=None):
         # if run is True, schedule must be True as well
         assert not run or schedule
         self.descs = self._file_handler.load()
         if schedule:
-            self.schedule_experiments()
-            if run:
-                self.run_experiments()
+            more = True
+            while more:
+                more = self.schedule_experiments(
+                    limit_unscheduled=limit_unscheduled
+                )
+                if run:
+                    self.run_experiments()
 
     def dump_experiment_descriptions(self):
         self._file_handler.dump(self.descs)
 
-    def _schedule_unscheduled(self, unscheduled):
+    def _schedule_unscheduled(self, unscheduled, limit=None):
         runners = []
+        if limit is not None:
+            unscheduled = unscheduled[:int(limit)]
         # make unscheduled mutable during iteration
         for desc in list(unscheduled):
             duration = desc.get('duration', self.DEFAULT_EXP_DURATION)
@@ -372,18 +379,30 @@ class ExperimentDispatcher:
             self.descs["unscheduled"].remove(desc)
             self.descs[runner.exp_id] = desc
             runners.append(runner)
-        del self.descs["unscheduled"]
+        if limit is None:
+            del self.descs["unscheduled"]
+        else:
+            self.descs["unscheduled"] = self.descs["unscheduled"][int(limit):]
+            if self.descs["unscheduled"]:
+                self.descs["globals"]["env"].update(
+                    self.descs["unscheduled"][0]["env"]
+                )
         self.dump_experiment_descriptions()
         return runners
 
-    def schedule_experiments(self):
+    def schedule_experiments(self, limit_unscheduled=None):
         self.runners = []
 
-        for key, desc in list(self.descs.items()):
+        for key, desc in sorted(list(self.descs.items()), key=lambda k: str(k[0])):
             if key == 'globals':
                 continue
             if key == 'unscheduled':
-                self.runners.extend(self._schedule_unscheduled(desc))
+                self.runners.extend(
+                    self._schedule_unscheduled(
+                        desc,
+                        limit=limit_unscheduled,
+                    )
+                )
             else:
                 try:
                     logger.info(
@@ -394,11 +413,17 @@ class ExperimentDispatcher:
                                                            exp_id=key,
                                                            api=self.api)
                     self.runners.append(runner)
+                    if (
+                        limit_unscheduled is not None
+                        and len(self.runners) >= limit_unscheduled
+                    ):
+                        break
                 except ExperimentError as exc:
                     logger.error('Unable to requeue %d: %s', key, exc)
                     del self.descs[key]
                     self.dump_experiment_descriptions()
         self.runners.sort(key=lambda runner: runner.exp_id)
+        return len(self.descs.get("unscheduled", [])) > 0
 
     def run_experiments(self):
         while self.has_experiments_to_run():
@@ -409,6 +434,8 @@ class ExperimentDispatcher:
                 break
             for runner in self.runners:
                 exp_id = runner.exp_id
+                if exp_id is None:
+                    return
                 logger.info('Waiting for experiment %d to start', exp_id)
                 try:
                     runner.experiment.wait()
