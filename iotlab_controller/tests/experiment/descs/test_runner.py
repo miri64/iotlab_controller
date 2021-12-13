@@ -753,7 +753,7 @@ def test_experiment_dispatcher_load_exp_descs(mocker, exp_dispatcher,
         'iotlab_controller.experiment.descs.file_handler.'
         'DescriptionFileHandler.load'
     )
-    exp_dispatcher.schedule_experiments = mocker.Mock()
+    exp_dispatcher.schedule_experiments = mocker.Mock(return_value=False)
     exp_dispatcher.run_experiments = mocker.Mock()
     exp_dispatcher.load_experiment_descriptions(schedule=schedule, run=run)
     load.assert_called_once()
