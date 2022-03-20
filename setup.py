@@ -22,7 +22,7 @@ def get_requirements():
 
 extras_require = {
     "networked": ["networkx>=2.2"],
-    "tmux": ["libtmux"],
+    "tmux": ["libtmux<0.11"],
     "all": []
 }
 
