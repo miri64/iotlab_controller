@@ -420,7 +420,7 @@ class NetworkedNodes(BaseNodes):
     @classmethod
     def _from_existing_nodes(cls, nodes, site=None, state=None, api=None,
                              node_class=BaseNode):
-        # pylint: disable=too-many-arguments,arguments-differ
+        # pylint: disable=too-many-arguments,arguments-differ,arguments-renamed
         # Maybe fix later
         # Adds additional, but optional arguments
         res = cls(site=site, state=state, api=api, node_class=node_class)
