@@ -287,13 +287,11 @@ def test_experiment_runner_init_success(mocker, api_mock, exp_id, exp_nodes,
             descs[exp_id]['nodes']['network']['edgelist_file'],
             mode='rb'
         )
-    # with python 3.6 mocking the edgelist file does not work properly
-    if not check_edgefile or sys.version_info >= (3, 7):    # pragma: no cover
-        assert len(runner.nodes) == exp_nodes
-        assert 'm3-1.grenoble.iot-lab.info' in runner.nodes
-        assert 'm3-2.grenoble.iot-lab.info' in runner.nodes
-        if exp_nodes > 2:
-            assert 'm3-3.grenoble.iot-lab.info' in runner.nodes
+    assert len(runner.nodes) == exp_nodes
+    assert 'm3-1.grenoble.iot-lab.info' in runner.nodes
+    assert 'm3-2.grenoble.iot-lab.info' in runner.nodes
+    if exp_nodes > 2:
+        assert 'm3-3.grenoble.iot-lab.info' in runner.nodes
     assert runner.experiment.name == dispatcher.DEFAULT_EXP_NAME
     if descs[exp_id].get('firmwares') or descs[exp_id].get('sink_firmware'):
         assert len(runner.experiment.firmwares) == exp_nodes
