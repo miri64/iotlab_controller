@@ -259,7 +259,7 @@ class ExperimentDispatcher:
         ctx.update(self.pre_experiment(runner, ctx, *args, **kwargs) or {})
 
     def pre_experiment(self, runner, ctx, *args, **kwargs):
-        # pylint: disable=unused-argument,no-self-use
+        # pylint: disable=unused-argument
         return {}
 
     @staticmethod
@@ -301,18 +301,18 @@ class ExperimentDispatcher:
         self.post_experiment(runner, ctx, *args, **kwargs)
 
     def post_experiment(self, runner, ctx, *args, **kwargs):
-        # pylint: disable=unused-argument,no-self-use
+        # pylint: disable=unused-argument
         pass
 
     def _pre_run(self, runner, run, ctx, *args, **kwargs):
         ctx.update(self.pre_run(runner, run, ctx, *args, **kwargs) or {})
 
     def pre_run(self, runner, run, ctx, *args, **kwargs):
-        # pylint: disable=unused-argument,no-self-use
+        # pylint: disable=unused-argument
         return {}
 
     def run(self, runner, run, ctx, *args, **kwargs):
-        # pylint: disable=unused-argument,no-self-use
+        # pylint: disable=unused-argument
         pass
 
     def _post_run(self, runner, run, ctx, *args, **kwargs):
@@ -321,7 +321,7 @@ class ExperimentDispatcher:
         runner.dispatcher.dump_experiment_descriptions()
 
     def post_run(self, runner, run, ctx, *args, **kwargs):
-        # pylint: disable=unused-argument,no-self-use
+        # pylint: disable=unused-argument
         pass
 
     @property

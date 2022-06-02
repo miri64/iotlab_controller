@@ -113,7 +113,6 @@ class YAMLSerializer(DescriptionSerializerBase):
 class DescriptionSerializerFactory:
     # pylint: disable=too-few-public-methods
     def get_serializer(self, filename):
-        # pylint: disable=no-self-use
         if filename.endswith('.json'):
             return JSONSerializer()
         if filename.endswith('.yaml') or \
