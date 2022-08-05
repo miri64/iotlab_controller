@@ -3,6 +3,7 @@
 # Distributed under terms of the MIT license.
 
 import logging
+import subprocess
 import time
 import urllib
 
@@ -284,8 +285,12 @@ class ExperimentDispatcher:
                         'Setting idx=%s in run description %s may lead to '
                         'inconsistent lognames', run_desc['idx'], run_desc
                     )
-                self._retry_http_error(runner.reflash_firmwares, run_desc,
-                                       last_run_desc)
+                try:
+                    self._retry_http_error(runner.reflash_firmwares, run_desc,
+                                           last_run_desc)
+                except subprocess.CalledProcessError:
+                    run_desc["rebuild"] = True
+                    raise
                 last_run_desc = run_desc
                 if run_desc.get('reset', True):
                     self._retry_http_error(exp.nodes.reset, exp.exp_id)

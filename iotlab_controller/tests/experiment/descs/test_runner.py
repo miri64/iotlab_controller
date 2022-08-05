@@ -7,6 +7,7 @@
 import copy
 import logging
 import pytest
+import subprocess
 import sys
 import time
 import urllib
@@ -1034,6 +1035,57 @@ def test_experiment_dispatcher_run_exps_retry_http(mocker, exp_dispatcher,
     open_mock.reset_mock()
     exp_dispatcher.run_experiments()
     assert len(func_mock.call_args_list) == 2
+
+
+@pytest.mark.parametrize(
+    'descs', [
+        pytest.param(
+            {
+                'globals': {
+                    'nodes': ['m3-1.grenoble.iot-lab.info'],
+                },
+                123455: {
+                    'runs': [{'name': 'one', 'idx': 1235}],
+                },
+            },
+        ),
+    ],
+    indirect=['descs']
+)
+def test_experiment_dispatcher_run_failed_reflash(mocker, exp_dispatcher,
+                                                  descs):
+    mocker.patch(
+        'iotlabcli.experiment.get_experiment',
+        return_value={'state': 'Running',
+                      'nodes': ['m3-1.grenoble.iot-lab.info']}
+    )
+    mocker.patch(
+        'iotlab_controller.experiment.descs.file_handler.'
+        'DescriptionFileHandler.load',
+        return_value=descs
+    )
+    mocker.patch(
+        'iotlab_controller.experiment.descs.runner.ExperimentRunner.'
+        'reflash_firmwares',
+        side_effect=[
+            subprocess.CalledProcessError(
+                returncode=1,
+                cmd=mocker.Mock(),
+                output=mocker.Mock(),
+                stderr=b"foobar",
+            )
+        ]
+    )
+    open_mock = mocker.mock_open()
+    mocker.patch('iotlab_controller.experiment.descs.file_handler.open',
+                 open_mock)
+    exp_dispatcher.load_experiment_descriptions(False, False)
+    assert "rebuild" not in descs[123455]["runs"][0]
+    exp_dispatcher.schedule_experiments()
+    open_mock.reset_mock()
+    with pytest.raises(subprocess.CalledProcessError):
+        exp_dispatcher.run_experiments()
+    assert descs[123455]["runs"][0]["rebuild"]
 
 
 def test_experiment_dispatcher_run_exps_no_runners(caplog, mocker,
