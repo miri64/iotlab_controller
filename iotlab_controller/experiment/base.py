@@ -20,7 +20,7 @@ class BaseExperiment:
     # Maybe fix later
     def __init__(self, name, nodes, *args, target=None, firmwares=None,
                  exp_id=None, profiles=None, api=None, **kwargs):
-        # pylint: disable=redefined-outer-name
+        # pylint: disable=redefined-outer-name,too-many-arguments
         # nodes module is not used in this constructor, so it is safe to
         # redefine the name as a variable
         if (firmwares is not None) and \
@@ -59,7 +59,7 @@ class BaseExperiment:
     def iter_experiments(cls, *args, include_waiting=False, target=None,
                          api=None, nodes_class=nodes.BaseNodes,
                          node_class=nodes.BaseNode, **kwargs):
-
+        # pylint: disable=too-many-arguments
         if api is None:
             api = common.get_default_api()
 

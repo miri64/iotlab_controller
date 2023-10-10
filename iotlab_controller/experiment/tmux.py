@@ -17,6 +17,7 @@ from ..experiment import base
 class TmuxExperiment(base.BaseExperiment):
     def __init__(self, name, nodes, *args, target=None, firmwares=None,
                  exp_id=None, profiles=None, api=None, **kwargs):
+        # pylint: disable=too-many-arguments
         super().__init__(name=name, nodes=nodes, target=target,
                          firmwares=firmwares, exp_id=exp_id, profiles=profiles,
                          api=api, *args, **kwargs)

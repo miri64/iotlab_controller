@@ -186,7 +186,7 @@ class BaseNodes:
     @classmethod
     def all_nodes(cls, *args, site=None, state=None, archi=None, api=None,
                   node_class=BaseNode, **kwargs):
-        # pylint: disable=unexpected-keyword-arg
+        # pylint: disable=unexpected-keyword-arg,too-many-arguments
         # Maybe fix later
         res = cls(state=state, api=api, node_class=node_class,
                   *args, **kwargs)
@@ -445,6 +445,7 @@ class NetworkedNodes(BaseNodes):
     @classmethod
     def all_nodes(cls, *args, site=None, state=None, archi=None, api=None,
                   node_class=BaseNode, **kwargs):
+        # pylint: disable=too-many-arguments
         res = cls(site=site, state=state, api=api, node_class=node_class,
                   *args, **kwargs)
         # pylint: disable=protected-access
