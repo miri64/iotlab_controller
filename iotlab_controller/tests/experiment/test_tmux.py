@@ -52,8 +52,7 @@ def test_tmux_experiment_init(mocker, base_nodes):  # noqa: F811
     )
     init.assert_called_once()
     # The tmux server is a TMUX server object but has no sessions
-    with pytest.raises(libtmux.exc.LibTmuxException):
-        assert not exp.tmux_server.list_sessions()
+    assert not exp.tmux_server.sessions
     assert exp.tmux_session is None
 
 
@@ -73,14 +72,13 @@ def test_tmux_experiment_init(mocker, base_nodes):  # noqa: F811
 def test_tmux_experiment_init_session(tmux_exp, window_name, pane_id,
                                       cwd):
     # tmux_exp has no session initialized
-    with pytest.raises(libtmux.exc.LibTmuxException):
-        assert not tmux_exp.tmux_server.list_sessions()
+    assert not tmux_exp.tmux_server.sessions
     session = tmux_exp.initialize_tmux_session('test-session', window_name,
                                                pane_id, cwd)
     assert session is not None
     assert session == tmux_exp.tmux_session
     # there is now a session named test-session
-    tmux_sessions = [s for s in tmux_exp.tmux_server.list_sessions()
+    tmux_sessions = [s for s in tmux_exp.tmux_server.sessions
                      if s.name == 'test-session']
     assert len(tmux_sessions) == 1
     assert session.window.session == tmux_sessions[0]
@@ -100,19 +98,18 @@ def test_tmux_experiment_init_session(tmux_exp, window_name, pane_id,
         (None,          None,   None),
         ('test-window', None,   None),
         (None,          '%0',   None),
-        ('test-window', '%0',   None),
+        ('test-window', '%1',   None),
         (None,          None,   '/tmp'),
         ('test-window', None,   '/tmp'),
         (None,          '%0',   '/tmp'),
-        ('test-window', '%0',   '/tmp'),
+        ('test-window', '%1',   '/tmp'),
     ]
 )
 def test_tmux_experiment_init_session_existing_session(tmux_exp,
                                                        window_name,
                                                        pane_id, cwd):
     # tmux_exp has no session initialized
-    with pytest.raises(libtmux.exc.LibTmuxException):
-        assert not tmux_exp.tmux_server.list_sessions()
+    assert not tmux_exp.tmux_server.sessions
     cmd = ['tmux', 'new-session', '-d', '-s', 'test-session', '-n',
            'other-window']
     subprocess.run(cmd, check=True)
@@ -121,7 +118,7 @@ def test_tmux_experiment_init_session_existing_session(tmux_exp,
     assert session is not None
     assert session == tmux_exp.tmux_session
     # there is now a session named test-session
-    tmux_sessions = [s for s in tmux_exp.tmux_server.list_sessions()
+    tmux_sessions = [s for s in tmux_exp.tmux_server.sessions
                      if s.name == 'test-session']
     assert len(tmux_sessions) == 1
     assert session.window.session == tmux_sessions[0]
@@ -220,7 +217,7 @@ def test_tmux_experiment_serial_aggregator_timeout(mocker, tmux_exp):
     expect = "serial_aggregator -i 12345"
     with pytest.raises(iotlab_controller.experiment.base.ExperimentError):
         with tmux_exp.serial_aggregator():
-            pass
+            assert False  # pragma: no cover
     send_keys.assert_any_call(expect, enter=True, wait_after=2)
     # last thing done is closing the serial_aggregator
     send_keys.assert_called_with("C-c")

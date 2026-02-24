@@ -270,6 +270,8 @@ def test_experiment_runner_init_faulty_descs(mocker, api_mock, exp_id, descs):
 )
 def test_experiment_runner_init_success(mocker, api_mock, exp_id, exp_nodes,
                                         descs):
+    exists = mocker.patch("os.path.exists")
+    exists.return_value = False
     dispatcher = mocker.Mock()
     if isinstance(descs[exp_id]['nodes'], dict) and \
        'edgelist_file' in descs[exp_id]['nodes']['network']:
