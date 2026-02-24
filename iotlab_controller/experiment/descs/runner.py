@@ -391,7 +391,10 @@ class ExperimentDispatcher:
     def schedule_experiments(self, limit_unscheduled=None):
         self.runners = []
 
-        for key, desc in sorted(list(self.descs.items()), key=lambda k: str(k[0])):
+        for key, desc in sorted(
+            list(self.descs.items()),
+            key=lambda k: str(k[0])
+        ):
             if key == 'globals':
                 continue
             if key == 'unscheduled':

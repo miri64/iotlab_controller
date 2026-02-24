@@ -885,7 +885,9 @@ def test_experiment_dispatcher_dump_exp_descs(mocker, exp_dispatcher, descs):
                 'nodes': ['m3-1.grenoble.iot-lab.info'],
                 'runs': [],
             },
-        }, id='with scheduled experiment, with globals, no env, limit_unscheduled'),
+        }, id=(
+            'with scheduled experiment, with globals, '
+            'no env, limit_unscheduled')),
     ], indirect=['descs']
 )
 def test_experiment_dispatcher_sched_exp(mocker, exp_dispatcher, exp_runners,
