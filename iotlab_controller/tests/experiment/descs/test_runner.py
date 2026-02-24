@@ -805,20 +805,20 @@ def test_experiment_dispatcher_dump_exp_descs(mocker, exp_dispatcher, descs):
 
 
 @pytest.mark.parametrize(
-    'exp_runners, exp_id, descs', [
-        pytest.param(1, None, {
+    'exp_runners, exp_id, limit_unscheduled, descs', [
+        pytest.param(1, None, None, {
             'unscheduled': {
                 'nodes': ['m3-1.grenoble.iot-lab.info'],
                 'runs': [],
             },
         }, id='no globals'),
-        pytest.param(1, None, {
+        pytest.param(1, None, None, {
             'globals': {
                 'nodes': ['m3-1.grenoble.iot-lab.info'],
             },
             'unscheduled': [{'runs': []}],
         }, id='with globals'),
-        pytest.param(2, 123455, {
+        pytest.param(2, 123455, None, {
             123455: {
                 'nodes': ['m3-1.grenoble.iot-lab.info'],
                 'runs': [],
@@ -828,7 +828,7 @@ def test_experiment_dispatcher_dump_exp_descs(mocker, exp_dispatcher, descs):
                 'runs': [],
             }],
         }, id='with scheduled experiment, no globals'),
-        pytest.param(2, 123455, {
+        pytest.param(2, 123455, None, {
             'globals': {
                 'nodes': ['m3-1.grenoble.iot-lab.info'],
             },
@@ -838,10 +838,58 @@ def test_experiment_dispatcher_dump_exp_descs(mocker, exp_dispatcher, descs):
                 'runs': [],
             },
         }, id='with scheduled experiment, with globals'),
+        pytest.param(3, 123455, 2, {
+            'globals': {
+                'env': {},
+                'nodes': ['m3-1.grenoble.iot-lab.info'],
+            },
+            'unscheduled': [
+                {
+                    "nodes": ['m3-1.grenoble.iot-lab.info'],
+                    "runs": [],
+                },
+                {
+                    "nodes": ['m3-1.grenoble.iot-lab.info'],
+                    "runs": [],
+                },
+                {
+                    "env": {"TEST": "1"},
+                    "nodes": ['m3-1.grenoble.iot-lab.info'],
+                    "runs": [],
+                },
+            ],
+            123455: {
+                'nodes': ['m3-1.grenoble.iot-lab.info'],
+                'runs': [],
+            },
+        }, id='with scheduled experiment, with globals, limit_unscheduled'),
+        pytest.param(3, 123455, 2, {
+            'globals': {
+                'nodes': ['m3-1.grenoble.iot-lab.info'],
+            },
+            'unscheduled': [
+                {
+                    "nodes": ['m3-1.grenoble.iot-lab.info'],
+                    "runs": [],
+                },
+                {
+                    "nodes": ['m3-1.grenoble.iot-lab.info'],
+                    "runs": [],
+                },
+                {
+                    "nodes": ['m3-1.grenoble.iot-lab.info'],
+                    "runs": [],
+                },
+            ],
+            123455: {
+                'nodes': ['m3-1.grenoble.iot-lab.info'],
+                'runs': [],
+            },
+        }, id='with scheduled experiment, with globals, no env, limit_unscheduled'),
     ], indirect=['descs']
 )
 def test_experiment_dispatcher_sched_exp(mocker, exp_dispatcher, exp_runners,
-                                         exp_id, descs):
+                                         exp_id, limit_unscheduled, descs):
     mocker.patch(
         'iotlab_controller.experiment.descs.runner.'
         'ExperimentRunner.build_firmwares'
@@ -866,12 +914,17 @@ def test_experiment_dispatcher_sched_exp(mocker, exp_dispatcher, exp_runners,
     exp_dispatcher.descs = descs
     # fill runners with some garbage
     exp_dispatcher.runners = [1, 2, 3, 4, 5, 6, 7, 8]
-    exp_dispatcher.schedule_experiments()
+    exp_dispatcher.schedule_experiments(limit_unscheduled=limit_unscheduled)
     assert len(exp_dispatcher.runners) == exp_runners
     assert exp_dispatcher.runners[-1].exp_id == 123456
     assert len(exp_dispatcher.runners[-1].nodes) == 1
     assert 'm3-1.grenoble.iot-lab.info' in exp_dispatcher.runners[-1].nodes
-    assert 'unscheduled' not in descs
+    if limit_unscheduled is None:
+        assert 'unscheduled' not in descs
+    else:
+        assert len(descs["unscheduled"]) == (
+            len(pre_descs["unscheduled"]) - limit_unscheduled
+        )
     assert 123456 in descs
     assert descs[123456] == pre_descs['unscheduled'][0]
     if exp_id is not None:
