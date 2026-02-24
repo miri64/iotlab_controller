@@ -35,7 +35,9 @@ class TmuxExperiment(base.BaseExperiment):
         self.tmux_server = libtmux.Server()
         return self.tmux_server.sessions.get(**{"session_name": session_name})
 
-    def _find_or_create_tmux_session(self, session_name, window_name=None, cwd=None):
+    def _find_or_create_tmux_session(
+        self, session_name, window_name=None, cwd=None
+    ):
         while self.tmux_session is None:
             try:
                 self.tmux_session = self.tmux_server.sessions.get(
@@ -66,7 +68,9 @@ class TmuxExperiment(base.BaseExperiment):
             # find pane
             if window_name is not None:
                 try:
-                    self.tmux_session = self.tmux_session.windows.get(**search_params)
+                    self.tmux_session = self.tmux_session.windows.get(
+                        **search_params
+                    )
                 except libtmux.exc.ObjectDoesNotExist:
                     self.tmux_session = self.tmux_session.new_window(
                         window_name=window_name,
@@ -76,7 +80,9 @@ class TmuxExperiment(base.BaseExperiment):
             else:
                 self.tmux_session = self.tmux_session.select_window(0)
             if pane_id is not None:
-                self.tmux_session = self.tmux_session.panes.get(**search_params)
+                self.tmux_session = self.tmux_session.panes.get(
+                    **search_params
+                )
             else:
                 self.tmux_session = self.tmux_session.select_pane(0)
         return self.tmux_session
