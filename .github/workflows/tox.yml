@@ -48,7 +48,7 @@ jobs:
       with:
         flags: ${{ matrix.python-version }}
     - name: Publish package to PyPI
-      uses: pypa/gh-action-pypi-publish@master
+      uses: pypa/gh-action-pypi-publish@release/v1
       if: >-
         matrix.python-version == '3.14' &&
         github.event_name == 'push' &&
