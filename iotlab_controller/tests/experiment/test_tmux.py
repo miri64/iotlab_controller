@@ -57,24 +57,24 @@ def test_tmux_experiment_init(mocker, base_nodes):  # noqa: F811
 
 
 @pytest.mark.parametrize(
-    'window_name, pane_id, cwd',
+    'window_name, pane_idx, cwd',
     [
         (None,          None,   None),
         ('test-window', None,   None),
-        (None,          '%0',   None),
-        ('test-window', '%0',   None),
+        (None,          0,      None),
+        ('test-window', 0,      None),
         (None,          None,   '/tmp'),
         ('test-window', None,   '/tmp'),
-        (None,          '%0',   '/tmp'),
-        ('test-window', '%0',   '/tmp'),
+        (None,          0,      '/tmp'),
+        ('test-window', 0,      '/tmp'),
     ]
 )
-def test_tmux_experiment_init_session(tmux_exp, window_name, pane_id,
+def test_tmux_experiment_init_session(tmux_exp, window_name, pane_idx,
                                       cwd):
     # tmux_exp has no session initialized
     assert not tmux_exp.tmux_server.sessions
     session = tmux_exp.initialize_tmux_session('test-session', window_name,
-                                               pane_id, cwd)
+                                               pane_idx, cwd)
     assert session is not None
     assert session == tmux_exp.tmux_session
     # there is now a session named test-session
@@ -88,33 +88,33 @@ def test_tmux_experiment_init_session(tmux_exp, window_name, pane_id,
         # capture_pane() provides a list of lines, check if cwd is in it.
         assert cwd in tmux_exp.tmux_session.capture_pane()
     new_session = tmux_exp.initialize_tmux_session('test-session', window_name,
-                                                   pane_id, cwd)
+                                                   pane_idx, cwd)
     assert session == new_session
 
 
 @pytest.mark.parametrize(
-    'window_name, pane_id, cwd',
+    'window_name, pane_idx, cwd',
     [
         (None,          None,   None),
         ('test-window', None,   None),
-        (None,          '%0',   None),
-        ('test-window', '%1',   None),
+        (None,          0,      None),
+        ('test-window', 0,      None),
         (None,          None,   '/tmp'),
         ('test-window', None,   '/tmp'),
-        (None,          '%0',   '/tmp'),
-        ('test-window', '%1',   '/tmp'),
+        (None,          0,      '/tmp'),
+        ('test-window', 0,      '/tmp'),
     ]
 )
 def test_tmux_experiment_init_session_existing_session(tmux_exp,
                                                        window_name,
-                                                       pane_id, cwd):
+                                                       pane_idx, cwd):
     # tmux_exp has no session initialized
     assert not tmux_exp.tmux_server.sessions
     cmd = ['tmux', 'new-session', '-d', '-s', 'test-session', '-n',
            'other-window']
     subprocess.run(cmd, check=True)
     session = tmux_exp.initialize_tmux_session('test-session', window_name,
-                                               pane_id, cwd)
+                                               pane_idx, cwd)
     assert session is not None
     assert session == tmux_exp.tmux_session
     # there is now a session named test-session
@@ -130,7 +130,7 @@ def test_tmux_experiment_init_session_existing_session(tmux_exp,
         # capture_pane() provides a list of lines, check if cwd is in it.
         assert cwd in tmux_exp.tmux_session.capture_pane()
     new_session = tmux_exp.initialize_tmux_session('test-session', window_name,
-                                                   pane_id, cwd)
+                                                   pane_idx, cwd)
     assert session == new_session
 
 

@@ -49,7 +49,7 @@ class TmuxExperiment(base.BaseExperiment):
                                                               cwd)
 
     def initialize_tmux_session(self, session_name, window_name=None,
-                                pane_id=None, cwd=None):
+                                pane_index=None, cwd=None):
         # pylint: disable=too-many-arguments
         # Maybe fix later
         if self.tmux_session is None:
@@ -59,8 +59,8 @@ class TmuxExperiment(base.BaseExperiment):
             }
             if window_name is not None:
                 search_params["window_name"] = window_name
-            if pane_id is not None:
-                search_params["pane_id"] = pane_id
+            if pane_index is not None:
+                search_params["pane_index"] = pane_index
 
             self._find_or_create_tmux_session(
                 session_name, window_name=window_name, cwd=cwd
@@ -79,10 +79,15 @@ class TmuxExperiment(base.BaseExperiment):
                     )
             else:
                 self.tmux_session = self.tmux_session.select_window(0)
-            if pane_id is not None:
-                self.tmux_session = self.tmux_session.panes.get(
-                    **search_params
-                )
+            if pane_index is not None:
+                try:
+                    self.tmux_session = self.tmux_session.select_pane(
+                        pane_index
+                    )
+                except libtmux.exc.LibTmuxException as exc:
+                    raise libtmux.exc.ObjectDoesNotExist(str(exc)) from (
+                        exc
+                    )
             else:
                 self.tmux_session = self.tmux_session.select_pane(0)
         return self.tmux_session
