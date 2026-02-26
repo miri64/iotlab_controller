@@ -60,7 +60,7 @@ class TmuxExperiment(base.BaseExperiment):
             if window_name is not None:
                 search_params["window_name"] = window_name
             if pane_index is not None:
-                search_params["pane_index"] = pane_index
+                search_params["pane_index"] = str(int(pane_index))
 
             self._find_or_create_tmux_session(
                 session_name, window_name=window_name, cwd=cwd
@@ -80,14 +80,9 @@ class TmuxExperiment(base.BaseExperiment):
             else:
                 self.tmux_session = self.tmux_session.select_window(0)
             if pane_index is not None:
-                try:
-                    self.tmux_session = self.tmux_session.select_pane(
-                        pane_index
-                    )
-                except libtmux.exc.LibTmuxException as exc:
-                    raise libtmux.exc.ObjectDoesNotExist(str(exc)) from (
-                        exc
-                    )
+                self.tmux_session = self.tmux_session.panes.get(
+                    **search_params
+                )
             else:
                 self.tmux_session = self.tmux_session.select_pane(0)
         return self.tmux_session
