@@ -66,7 +66,10 @@ class TmuxExperimentRunner(ExperimentRunner):
                 window_pane = (":".join(session_window[1:])).split(".")
                 res["window_name"] = window_pane[0]
                 if len(window_pane) > 1:
-                    res["pane_id"] = ".".join(window_pane[1:])
+                    assert len(window_pane) == 2, (
+                        "More than one pane index provided"
+                    )
+                    res["pane_index"] = int(window_pane[1])
         return res
 
 
