@@ -110,7 +110,7 @@ class TmuxExperimentDispatcher(ExperimentDispatcher):
         color = bool(run.get('serial_aggregator_color'))
         logname = ctx['logname']
         runner.experiment.cmd(f'echo "Starting run {run_name}" >> {logname}')
-        nodes = ctx.get('nodes')
+        nodes = runner.experiment.nodes
         with runner.experiment.serial_aggregator(site=site, with_a8=with_a8,
                                                  color=color, logname=logname,
                                                  nodes=nodes):
