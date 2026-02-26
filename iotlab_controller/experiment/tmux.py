@@ -145,7 +145,7 @@ class TmuxExperiment(base.BaseExperiment):
             self.stop_serial_aggregator()
             self.stop_serial_aggregator()
             self.stop_serial_aggregator()
-            time.sleep(.1)
+            time.sleep(.6)
 
     def send_keys(self, keys, enter=False, wait_after=0):
         assert self.tmux_session is not None
